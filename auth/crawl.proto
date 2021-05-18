@@ -1,0 +1,18 @@
+syntax = "proto3";
+package crawler;
+
+message SuccessResponse {
+    bool success = 1;
+}
+
+message CrawlItemParam {
+    int32 shopID = 1;
+}
+
+message Blank{}
+
+service CrawCategory {
+    rpc CrawCategory(Blank) returns (SuccessResponse);
+    // rpc CrawShop(Blank) returns (SuccessResponse);
+    // rpc CrawItem(CrawlItemParam) returns (SuccessResponse);
+}
