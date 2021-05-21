@@ -9,9 +9,8 @@ import (
 )
 
 var (
-	authController  = controller.GetAuthController()
-	userCache       = cache.GetUserCache()
-	crawlController = controller.GetCrawlerController()
+	authController = controller.GetAuthController()
+	userCache      = cache.GetUserCache()
 )
 
 func main() {
@@ -24,9 +23,11 @@ func main() {
 		authRoutes.POST("/refesh-token", middleware.Authorize(), authController.RefeshToken)
 	}
 
-	resourceRoutes := r.Group("/crawler", middleware.Authorize())
+	resourceRoutes := r.Group("/geometry", middleware.Authorize())
 	{
-		resourceRoutes.GET("/crawl-category", crawlController.CrawlCategory)
+		// resourceRoutes.GET("/crawl-category", crawlController.CrawlCategory)
+		resourceRoutes.GET("/current-address")
+
 	}
 	r.Run()
 }

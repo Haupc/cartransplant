@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log"
 
 	"google.golang.org/grpc"
@@ -13,4 +14,5 @@ func init() {
 	if err != nil {
 		log.Fatalf("did not connect: %s", err)
 	}
+	fmt.Println(conn)
 }

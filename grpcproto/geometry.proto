@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package grpcproto;
+
+// option optimize_for = CODE_SIZE;
+
+// import "schema.tl.crc32.proto";
+// import "schema.tl.sync.proto";
+// option go_package = ".;proto";
+message point {
+    string latitude = 1;
+    string longitude = 2;
+}
+
+message polyLine {
+    repeated point points = 1;
+}
+
+message polygon {
+    repeated point points = 1;
+}
+
+message jsonResponse {
+    bytes jsonResponse = 1;
+}
+
+service geometry {
+    rpc GetCurrentAddress (point) returns (jsonResponse);
+}
