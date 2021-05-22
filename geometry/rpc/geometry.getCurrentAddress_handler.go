@@ -7,7 +7,9 @@ import (
 	"github.com/haupc/cartransplant/utils/httputils"
 )
 
-const currentAddressUrl = "http://localhost/nominatim/reverse.php"
+const currentAdressPath = "/nominatim/reverse.php"
+
+var currentAddressUrl = locationHost + currentAdressPath
 
 func (g *geometryServer) GetCurrentAddress(ctx context.Context, req *grpcproto.Point) (*grpcproto.JsonResponse, error) {
 	// http://localhost/nominatim/reverse.php?format=json&lat=20.9785698&lon=105.7862095&zoom=21

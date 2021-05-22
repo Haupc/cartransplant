@@ -7,18 +7,10 @@ import (
 	"github.com/haupc/cartransplant/auth/config"
 	"github.com/haupc/cartransplant/auth/model"
 
-	"github.com/joho/godotenv"
 	"gorm.io/gorm"
 )
 
 var userRepository *userRepo
-
-func init() {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
-}
 
 // UserRepo interact with db
 type UserRepo interface {

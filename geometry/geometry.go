@@ -1,9 +1,10 @@
-package geometry
+package main
 
 import (
 	"log"
 	"net"
 
+	geometry "github.com/haupc/cartransplant/geometry/rpc"
 	"github.com/haupc/cartransplant/grpcproto"
 	"google.golang.org/grpc"
 )
@@ -16,7 +17,7 @@ func main() {
 	}
 	grpcServer := grpc.NewServer()
 
-	grpcproto.RegisterGeometryServer(grpcServer, newGeometryServer())
+	grpcproto.RegisterGeometryServer(grpcServer, geometry.NewGeometryServer())
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %s", err)

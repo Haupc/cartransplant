@@ -38,7 +38,7 @@ func (m *Point) Reset()         { *m = Point{} }
 func (m *Point) String() string { return proto.CompactTextString(m) }
 func (*Point) ProtoMessage()    {}
 func (*Point) Descriptor() ([]byte, []int) {
-	return fileDescriptor_geometry_25cbdbf5c23ff554, []int{0}
+	return fileDescriptor_geometry_3479cf96c24396c2, []int{0}
 }
 func (m *Point) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Point.Unmarshal(m, b)
@@ -83,7 +83,7 @@ func (m *PolyLine) Reset()         { *m = PolyLine{} }
 func (m *PolyLine) String() string { return proto.CompactTextString(m) }
 func (*PolyLine) ProtoMessage()    {}
 func (*PolyLine) Descriptor() ([]byte, []int) {
-	return fileDescriptor_geometry_25cbdbf5c23ff554, []int{1}
+	return fileDescriptor_geometry_3479cf96c24396c2, []int{1}
 }
 func (m *PolyLine) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PolyLine.Unmarshal(m, b)
@@ -121,7 +121,7 @@ func (m *Polygon) Reset()         { *m = Polygon{} }
 func (m *Polygon) String() string { return proto.CompactTextString(m) }
 func (*Polygon) ProtoMessage()    {}
 func (*Polygon) Descriptor() ([]byte, []int) {
-	return fileDescriptor_geometry_25cbdbf5c23ff554, []int{2}
+	return fileDescriptor_geometry_3479cf96c24396c2, []int{2}
 }
 func (m *Polygon) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Polygon.Unmarshal(m, b)
@@ -159,7 +159,7 @@ func (m *JsonResponse) Reset()         { *m = JsonResponse{} }
 func (m *JsonResponse) String() string { return proto.CompactTextString(m) }
 func (*JsonResponse) ProtoMessage()    {}
 func (*JsonResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_geometry_25cbdbf5c23ff554, []int{3}
+	return fileDescriptor_geometry_3479cf96c24396c2, []int{3}
 }
 func (m *JsonResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_JsonResponse.Unmarshal(m, b)
@@ -186,11 +186,58 @@ func (m *JsonResponse) GetJsonResponse() []byte {
 	return nil
 }
 
+type RouteRequest struct {
+	From                 *Point   `protobuf:"bytes,1,opt,name=from,proto3" json:"from,omitempty"`
+	To                   *Point   `protobuf:"bytes,2,opt,name=to,proto3" json:"to,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *RouteRequest) Reset()         { *m = RouteRequest{} }
+func (m *RouteRequest) String() string { return proto.CompactTextString(m) }
+func (*RouteRequest) ProtoMessage()    {}
+func (*RouteRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_geometry_3479cf96c24396c2, []int{4}
+}
+func (m *RouteRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RouteRequest.Unmarshal(m, b)
+}
+func (m *RouteRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RouteRequest.Marshal(b, m, deterministic)
+}
+func (dst *RouteRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RouteRequest.Merge(dst, src)
+}
+func (m *RouteRequest) XXX_Size() int {
+	return xxx_messageInfo_RouteRequest.Size(m)
+}
+func (m *RouteRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_RouteRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RouteRequest proto.InternalMessageInfo
+
+func (m *RouteRequest) GetFrom() *Point {
+	if m != nil {
+		return m.From
+	}
+	return nil
+}
+
+func (m *RouteRequest) GetTo() *Point {
+	if m != nil {
+		return m.To
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*Point)(nil), "grpcproto.point")
 	proto.RegisterType((*PolyLine)(nil), "grpcproto.polyLine")
 	proto.RegisterType((*Polygon)(nil), "grpcproto.polygon")
 	proto.RegisterType((*JsonResponse)(nil), "grpcproto.jsonResponse")
+	proto.RegisterType((*RouteRequest)(nil), "grpcproto.routeRequest")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -206,6 +253,7 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type GeometryClient interface {
 	GetCurrentAddress(ctx context.Context, in *Point, opts ...grpc.CallOption) (*JsonResponse, error)
+	GetRouting(ctx context.Context, in *RouteRequest, opts ...grpc.CallOption) (*JsonResponse, error)
 }
 
 type geometryClient struct {
@@ -225,9 +273,19 @@ func (c *geometryClient) GetCurrentAddress(ctx context.Context, in *Point, opts 
 	return out, nil
 }
 
+func (c *geometryClient) GetRouting(ctx context.Context, in *RouteRequest, opts ...grpc.CallOption) (*JsonResponse, error) {
+	out := new(JsonResponse)
+	err := c.cc.Invoke(ctx, "/grpcproto.geometry/GetRouting", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GeometryServer is the server API for Geometry service.
 type GeometryServer interface {
 	GetCurrentAddress(context.Context, *Point) (*JsonResponse, error)
+	GetRouting(context.Context, *RouteRequest) (*JsonResponse, error)
 }
 
 func RegisterGeometryServer(s *grpc.Server, srv GeometryServer) {
@@ -252,6 +310,24 @@ func _Geometry_GetCurrentAddress_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Geometry_GetRouting_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RouteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GeometryServer).GetRouting(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/grpcproto.geometry/GetRouting",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GeometryServer).GetRouting(ctx, req.(*RouteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Geometry_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "grpcproto.geometry",
 	HandlerType: (*GeometryServer)(nil),
@@ -260,26 +336,34 @@ var _Geometry_serviceDesc = grpc.ServiceDesc{
 			MethodName: "GetCurrentAddress",
 			Handler:    _Geometry_GetCurrentAddress_Handler,
 		},
+		{
+			MethodName: "GetRouting",
+			Handler:    _Geometry_GetRouting_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "geometry.proto",
 }
 
-func init() { proto.RegisterFile("geometry.proto", fileDescriptor_geometry_25cbdbf5c23ff554) }
+func init() { proto.RegisterFile("geometry.proto", fileDescriptor_geometry_3479cf96c24396c2) }
 
-var fileDescriptor_geometry_25cbdbf5c23ff554 = []byte{
-	// 206 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x4b, 0x4f, 0xcd, 0xcf,
-	0x4d, 0x2d, 0x29, 0xaa, 0xd4, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x4c, 0x2f, 0x2a, 0x48,
-	0x06, 0x33, 0x95, 0x1c, 0xb9, 0x58, 0x0b, 0xf2, 0x33, 0xf3, 0x4a, 0x84, 0xa4, 0xb8, 0x38, 0x72,
-	0x12, 0x4b, 0x32, 0x4b, 0x4a, 0x53, 0x52, 0x25, 0x18, 0x15, 0x18, 0x35, 0x38, 0x83, 0xe0, 0x7c,
-	0x21, 0x19, 0x2e, 0xce, 0x9c, 0xfc, 0xbc, 0x74, 0x88, 0x24, 0x13, 0x58, 0x12, 0x21, 0xa0, 0x64,
-	0xc2, 0xc5, 0x51, 0x90, 0x9f, 0x53, 0xe9, 0x93, 0x99, 0x97, 0x2a, 0xa4, 0xc1, 0xc5, 0x06, 0x36,
-	0xae, 0x58, 0x82, 0x51, 0x81, 0x59, 0x83, 0xdb, 0x48, 0x40, 0x0f, 0x6e, 0x95, 0x1e, 0x58, 0x22,
-	0x08, 0x2a, 0xaf, 0x64, 0xcc, 0xc5, 0x0e, 0xd2, 0x95, 0x9e, 0x9f, 0x47, 0x82, 0x26, 0x23, 0x2e,
-	0x9e, 0xac, 0xe2, 0xfc, 0xbc, 0xa0, 0xd4, 0xe2, 0x82, 0xfc, 0xbc, 0xe2, 0x54, 0x21, 0x25, 0x54,
-	0x3e, 0xd8, 0xe1, 0x3c, 0x41, 0x28, 0x62, 0x46, 0x5e, 0x5c, 0x1c, 0x30, 0xef, 0x0b, 0xd9, 0x71,
-	0x09, 0xba, 0xa7, 0x96, 0x38, 0x97, 0x16, 0x15, 0xa5, 0xe6, 0x95, 0x38, 0xa6, 0xa4, 0x14, 0xa5,
-	0x16, 0x17, 0x0b, 0x61, 0x58, 0x27, 0x25, 0x8e, 0x24, 0x82, 0x6c, 0x56, 0x12, 0x1b, 0x58, 0xcc,
-	0x18, 0x10, 0x00, 0x00, 0xff, 0xff, 0x13, 0x8f, 0x76, 0x21, 0x51, 0x01, 0x00, 0x00,
+var fileDescriptor_geometry_3479cf96c24396c2 = []byte{
+	// 259 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x90, 0x3f, 0x4f, 0xf3, 0x30,
+	0x10, 0xc6, 0x95, 0xbc, 0x2f, 0x25, 0x39, 0x22, 0x04, 0xb7, 0x50, 0x55, 0x0c, 0x51, 0xc4, 0x90,
+	0x29, 0x43, 0xca, 0x5c, 0xa9, 0x62, 0xe8, 0xc2, 0xe4, 0x81, 0x1d, 0xc8, 0x61, 0x05, 0xa5, 0x3e,
+	0x63, 0x9f, 0x87, 0x7e, 0x05, 0x3e, 0x35, 0xc2, 0x40, 0x49, 0x44, 0x19, 0xd8, 0x7c, 0xcf, 0xef,
+	0x79, 0x7c, 0x7f, 0xe0, 0x54, 0x13, 0x6f, 0x49, 0xdc, 0xae, 0xb1, 0x8e, 0x85, 0x31, 0xd7, 0xce,
+	0x3e, 0xc6, 0x67, 0xb5, 0x86, 0x23, 0xcb, 0xbd, 0x11, 0x5c, 0x40, 0x36, 0xdc, 0x4b, 0x2f, 0xa1,
+	0xa3, 0x79, 0x52, 0x26, 0x75, 0xae, 0xf6, 0x35, 0x5e, 0x42, 0x3e, 0xb0, 0xd1, 0x1f, 0x30, 0x8d,
+	0xf0, 0x5b, 0xa8, 0xae, 0x21, 0xb3, 0x3c, 0xec, 0x6e, 0x7b, 0x43, 0x58, 0xc3, 0x2c, 0x7e, 0xe7,
+	0xe7, 0x49, 0xf9, 0xaf, 0x3e, 0x69, 0xcf, 0x9a, 0x7d, 0xab, 0x26, 0x02, 0xf5, 0xc9, 0xab, 0x25,
+	0x1c, 0xbf, 0xa7, 0x34, 0x9b, 0x3f, 0x84, 0x5a, 0x28, 0x9e, 0x3d, 0x1b, 0x45, 0xde, 0xb2, 0xf1,
+	0x84, 0xd5, 0xb4, 0x8e, 0x83, 0x17, 0x6a, 0xa2, 0x55, 0x77, 0x50, 0x38, 0x0e, 0x42, 0x8a, 0x5e,
+	0x02, 0x79, 0xc1, 0x2b, 0xf8, 0xff, 0xe4, 0x78, 0x1b, 0xbd, 0x87, 0x7a, 0x45, 0x8a, 0x25, 0xa4,
+	0xc2, 0x71, 0xd7, 0x43, 0x9e, 0x54, 0xb8, 0x7d, 0x4d, 0x20, 0xfb, 0xba, 0x2b, 0xae, 0xe0, 0x7c,
+	0x43, 0x72, 0x13, 0x9c, 0x23, 0x23, 0xeb, 0xae, 0x73, 0xe4, 0x3d, 0xfe, 0xc8, 0x2d, 0x2e, 0x46,
+	0xca, 0x64, 0x91, 0x15, 0xc0, 0x86, 0x44, 0x71, 0x90, 0xde, 0x68, 0x1c, 0xdb, 0xc6, 0xb3, 0xff,
+	0x9a, 0x7f, 0x98, 0x45, 0x6d, 0xf9, 0x16, 0x00, 0x00, 0xff, 0xff, 0xf2, 0xbe, 0x48, 0xc4, 0xea,
+	0x01, 0x00, 0x00,
 }

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -46,6 +47,10 @@ func InitConnection() {
 
 // BuildDBConfig load config from file
 func BuildDBConfig() *DBConfig {
+	err := godotenv.Load("database.env")
+	if err != nil {
+		log.Fatalf("Error loading database.env file")
+	}
 	return &DBConfig{
 		Host:     os.Getenv("DB_HOST"),
 		User:     os.Getenv("DB_USER"),

@@ -24,6 +24,11 @@ message jsonResponse {
     bytes jsonResponse = 1;
 }
 
+message routeRequest {
+    point from = 1;
+    point to = 2;
+}
 service geometry {
     rpc GetCurrentAddress (point) returns (jsonResponse);
+    rpc GetRouting (routeRequest) returns (jsonResponse);
 }

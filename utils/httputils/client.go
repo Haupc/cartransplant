@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 type httpClient struct {
@@ -26,6 +27,9 @@ func (c *httpClient) SetParams(params map[string]string) {
 
 // Get ...
 func (c *httpClient) Get(url string) ([]byte, error) {
+	if !strings.Contains(url, "?") {
+		url = url + "?"
+	}
 	for k, v := range c.params {
 		url = fmt.Sprintf("%s&%s=%s", url, k, v)
 	}
