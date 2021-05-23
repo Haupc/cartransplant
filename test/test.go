@@ -1,17 +1,24 @@
 package main
 
 import (
-	"context"
 	"fmt"
+	"log"
 
-	"github.com/haupc/cartransplant/grpcproto"
+	"github.com/haupc/cartransplant/utils/httputils"
 )
 
 func main() {
-	p := &grpcproto.Point{
-		Latitude:  "20.986387",
-		Longitude: "105.793815",
+	requestclient := httputils.NewHttpClient()
+	params := map[string]string{
+		"format": "json",
+		"q":      "Vu Xuan Thieu",
+		// "addressdetails": "1",
 	}
-	r, e := client.GetGeomClient().GetCurrentAddress(context.Background(), p)
-	fmt.Println(string(r.JsonResponse), e)
+	requestclient.SetParams(params)
+	response, err := requestclient.Get("http://localhost/nominatim/search.php?")
+	if err != nil {
+		log.Printf("GetCurrentAddress - Error: %v", err)
+		// return nil, err
+	}
+	fmt.Println(string(response))
 }

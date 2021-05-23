@@ -13,7 +13,7 @@ var (
 )
 
 func GetGeomClient() grpcproto.GeometryClient {
-	if geomClient != nil {
+	if geomClient == nil {
 		var err error
 		conn, err = grpc.Dial(":9000", grpc.WithInsecure())
 		if err != nil {

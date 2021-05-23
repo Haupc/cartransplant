@@ -3,7 +3,9 @@ package httputils
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -26,14 +28,16 @@ func (c *httpClient) SetParams(params map[string]string) {
 }
 
 // Get ...
-func (c *httpClient) Get(url string) ([]byte, error) {
-	if !strings.Contains(url, "?") {
-		url = url + "?"
+func (c *httpClient) Get(_url string) ([]byte, error) {
+	if !strings.Contains(_url, "?") && len(c.params) > 0 {
+		_url = _url + "?"
 	}
 	for k, v := range c.params {
-		url = fmt.Sprintf("%s&%s=%s", url, k, v)
+		_url = fmt.Sprintf("%s&%s=%s", _url, k, url.QueryEscape(v))
 	}
-	req, err := http.Get(url)
+	_url = strings.Replace(_url, "?&", "?", 1)
+	log.Println(_url)
+	req, err := http.Get(_url)
 	if err != nil {
 		return nil, err
 	}

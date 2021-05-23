@@ -28,7 +28,12 @@ message routeRequest {
     point from = 1;
     point to = 2;
 }
+
+message searchRequest {
+    string query = 1;
+}
 service geometry {
     rpc GetCurrentAddress (point) returns (jsonResponse);
     rpc GetRouting (routeRequest) returns (jsonResponse);
+    rpc SearchAddress (searchRequest) returns (jsonResponse);
 }
