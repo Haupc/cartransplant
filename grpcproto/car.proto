@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package grpcproto;
+
+import "geometry.proto";
+import "common.proto";
+
+message registerTripRequest {
+    int64 startTime = 1;
+    point from = 2;
+    point to = 3;
+}
+
+service car {
+    rpc registerTrip(registerTripRequest) returns (int);
+}

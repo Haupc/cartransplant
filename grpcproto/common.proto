@@ -1,0 +1,14 @@
+syntax = "proto3";
+package grpcproto;
+
+message int {
+    int64 value = 1;
+}
+
+message string {
+    string value = 1;
+}
+
+message bool {
+    bool value = 1;
+}
