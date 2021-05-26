@@ -31,7 +31,7 @@ func RouteResponseToDTO(response *dto.RouteResponse) dto.RoutingDTO {
 
 func LocationToPointDTO(location []float64) dto.Point {
 	return dto.Point{
-		Latitue:   fmt.Sprintf("%v", location[0]),
+		Latitude:  fmt.Sprintf("%v", location[0]),
 		Longitude: fmt.Sprintf("%v", location[1]),
 	}
 }
