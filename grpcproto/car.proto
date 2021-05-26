@@ -11,6 +11,18 @@ message registerTripRequest {
     point to = 3;
 }
 
+message findTripRequest {
+    int64 beginLeaveTime = 1;
+    int64 endLeaveTime = 2;
+    point from = 3;
+    point to = 4;
+    int32 option = 5;
+}
+
 service car {
+    // driver
     rpc registerTrip(registerTripRequest) returns (grpcproto.bool);
+    
+    // user
+    rpc findTrip(findTripRequest) returns (jsonResponse);
 }

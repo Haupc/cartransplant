@@ -16,6 +16,7 @@ var _carController *carController
 
 type CarController interface {
 	RegisterTrip(ctx *gin.Context)
+	FindTrip(ctx *gin.Context)
 }
 
 type carController struct {
@@ -38,6 +39,7 @@ func (c *carController) RegisterTrip(ctx *gin.Context) {
 	if err != nil {
 		respose := utils.BuildErrorResponse("Request wrong format", err.Error(), body)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
 	}
 	request := &grpcproto.RegisterTripRequest{
 		StartTime: registerTripRequest.StartTime,
@@ -51,4 +53,32 @@ func (c *carController) RegisterTrip(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, utils.BuildResponse(respose.Value, "success", nil))
+}
+
+func (c *carController) FindTrip(ctx *gin.Context) {
+	var findTripRequest dto.FindTripRequest
+	body, _ := ioutil.ReadAll(ctx.Request.Body)
+	err := json.Unmarshal(body, &findTripRequest)
+	if err != nil {
+		respose := utils.BuildErrorResponse("Request wrong format", err.Error(), body)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	request := &grpcproto.FindTripRequest{
+		BeginLeaveTime: findTripRequest.BeginLeaveTime,
+		EndLeaveTime:   findTripRequest.EndLeaveTime,
+		From:           findTripRequest.From.ToGrpcPoint(),
+		To:             findTripRequest.To.ToGrpcPoint(),
+		Option:         findTripRequest.Opt,
+	}
+	response, err := c.carClient.FindTrip(ctx, request)
+	if err != nil {
+		respose := utils.BuildErrorResponse("Something wrong happened", err.Error(), body)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	var respData dto.FindTripResponse
+	json.Unmarshal(response.JsonResponse, &respData)
+	ctx.JSON(http.StatusOK, utils.BuildResponse(true, "success", respData))
+
 }
