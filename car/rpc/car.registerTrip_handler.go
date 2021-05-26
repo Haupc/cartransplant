@@ -16,20 +16,20 @@ func (c *carServer) RegisterTrip(ctx context.Context, req *grpcproto.RegisterTri
 		To:   req.To,
 	}
 	resp, err := client.GetGeomClient().GetRouting(ctx, routeReq)
-	if err == nil {
+	if err != nil {
 		log.Printf("RegisterTrip - Error: %v", err)
 		return nil, err
 	}
 	var respObj dto.RoutingDTO
 	err = json.Unmarshal(resp.JsonResponse, &respObj)
-	if err == nil {
+	if err != nil {
 		log.Printf("RegisterTrip - Error: %v", err)
 		return nil, err
 	}
 
 	var userID int32 = 32
 	err = c.TripService.CreateTrip(respObj, int32(userID))
-	if err == nil {
+	if err != nil {
 		log.Printf("RegisterTrip - Error: %v", err)
 		return nil, err
 	}
