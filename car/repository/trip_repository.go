@@ -37,7 +37,7 @@ func (r *tripRepo) CreateTrip(route dto.RoutingDTO, userID int32) error {
 
 	query := fmt.Sprintf("insert into public.trip (user_id , way, way_json)  values (? , %s, ?)", lineString)
 	log.Printf("CreateTrip query: %s", query)
-	if err := r.db.Raw(query, userID, way_json).Error; err != nil {
+	if err := r.db.Exec(query, userID, way_json).Error; err != nil {
 		log.Printf("CreateTrip query - Error: %v", err)
 		return err
 	}
