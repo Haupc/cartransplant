@@ -10,7 +10,7 @@ import (
 	"github.com/haupc/cartransplant/grpcproto"
 )
 
-func (c *carServer) RegisterTrip(ctx context.Context, req *grpcproto.RegisterTripRequest) (*grpcproto.Int, error) {
+func (c *carServer) RegisterTrip(ctx context.Context, req *grpcproto.RegisterTripRequest) (*grpcproto.Bool, error) {
 	routeReq := &grpcproto.RouteRequest{
 		From: req.From,
 		To:   req.To,
@@ -18,9 +18,20 @@ func (c *carServer) RegisterTrip(ctx context.Context, req *grpcproto.RegisterTri
 	resp, err := client.GetGeomClient().GetRouting(ctx, routeReq)
 	if err == nil {
 		log.Printf("RegisterTrip - Error: %v", err)
+		return nil, err
 	}
 	var respObj dto.RoutingDTO
 	err = json.Unmarshal(resp.JsonResponse, &respObj)
+	if err == nil {
+		log.Printf("RegisterTrip - Error: %v", err)
+		return nil, err
+	}
+
 	var userID int32 = 32
-	c.TripService.CreateTrip(respObj, int32(userID))
+	err = c.TripService.CreateTrip(respObj, int32(userID))
+	if err == nil {
+		log.Printf("RegisterTrip - Error: %v", err)
+		return nil, err
+	}
+	return &grpcproto.Bool{Value: true}, nil
 }

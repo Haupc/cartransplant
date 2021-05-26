@@ -12,7 +12,7 @@ type tripService struct {
 }
 
 type TripService interface {
-	CreateTrip(route dto.RoutingDTO, userID int32)
+	CreateTrip(route dto.RoutingDTO, userID int32) error
 }
 
 func GetTripService() TripService {
@@ -24,6 +24,6 @@ func GetTripService() TripService {
 	return _tripService
 }
 
-func (s *tripService) CreateTrip(route dto.RoutingDTO, userID int32) {
-
+func (s *tripService) CreateTrip(route dto.RoutingDTO, userID int32) error {
+	return s.TripRepo.CreateTrip(route, userID)
 }
