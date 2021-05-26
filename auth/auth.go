@@ -11,6 +11,7 @@ import (
 var (
 	authController     = controller.GetAuthController()
 	geometryController = controller.GetGeometryController()
+	carController      = controller.GetCarController()
 	userCache          = cache.GetUserCache()
 )
 
@@ -32,6 +33,10 @@ func main() {
 		geometryRoutes.GET("/get-route", geometryController.GetRouting)
 		geometryRoutes.GET("/search-address", geometryController.SearchAddress)
 
+	}
+	carRoutes := r.Group("/car")
+	{
+		carRoutes.POST("/register-trip", carController.RegisterTrip)
 	}
 	r.Run(":8080")
 }

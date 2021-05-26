@@ -12,5 +12,5 @@ message registerTripRequest {
 }
 
 service car {
-    rpc registerTrip(registerTripRequest) returns (int);
+    rpc registerTrip(registerTripRequest) returns (grpcproto.bool);
 }

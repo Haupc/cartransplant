@@ -1,6 +1,15 @@
 package dto
 
+import "github.com/haupc/cartransplant/grpcproto"
+
 type Point struct {
-	Latitue   string `json:"lat"`
+	Latitude  string `json:"lat"`
 	Longitude string `json:"long"`
+}
+
+func (p Point) ToGrpcPoint() *grpcproto.Point {
+	return &grpcproto.Point{
+		Latitude:  p.Latitude,
+		Longitude: p.Longitude,
+	}
 }
