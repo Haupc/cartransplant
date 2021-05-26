@@ -77,7 +77,7 @@ func (c *carController) FindTrip(ctx *gin.Context) {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
 		return
 	}
-	var respData dto.FindTripResponse
+	var respData []dto.FindTripResponse
 	json.Unmarshal(response.JsonResponse, &respData)
 	ctx.JSON(http.StatusOK, utils.BuildResponse(true, "success", respData))
 
