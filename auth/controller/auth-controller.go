@@ -19,6 +19,7 @@ var auth *authController
 
 // AuthController : do auth things
 type AuthController interface {
+	Register(ctx *gin.Context)
 	Login(ctx *gin.Context)
 	Logout(ctx *gin.Context)
 	RefeshToken(ctx *gin.Context)
@@ -40,6 +41,25 @@ func GetAuthController() AuthController {
 	return auth
 }
 
+func (a *authController) Register(ctx *gin.Context) {
+	var registerBody dto.RegisterDTO
+	body, _ := ioutil.ReadAll(ctx.Request.Body)
+	err := json.Unmarshal(body, &registerBody)
+	if err != nil {
+		respose := utils.BuildErrorResponse("Request wrong format", err.Error(), body)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	success, err := a.authService.Register(registerBody.Username, registerBody.Password)
+	if err != nil {
+		response := utils.BuildErrorResponse("Register failed", err.Error(), registerBody)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+	response := utils.BuildResponse(success, "success", registerBody)
+	ctx.JSON(http.StatusOK, response)
+}
+
 func (a *authController) Login(ctx *gin.Context) {
 	var loginBody dto.LoginDTO
 	body, _ := ioutil.ReadAll(ctx.Request.Body)
@@ -47,11 +67,13 @@ func (a *authController) Login(ctx *gin.Context) {
 	if err != nil {
 		respose := utils.BuildErrorResponse("Request wrong format", err.Error(), body)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
 	}
 	token, err := auth.authService.Login(loginBody.Username, loginBody.Password)
 	if err != nil {
 		response := utils.BuildErrorResponse("Authen fail", err.Error(), loginBody)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
 	}
 	response := utils.BuildResponse(true, "success", token)
 	ctx.JSON(http.StatusOK, response)

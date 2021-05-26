@@ -16,6 +16,7 @@ var (
 )
 
 func main() {
+	// config.GetDbConnection().AutoMigrate(&model.User{}, model.Role{}, model.Permission{})
 	r := gin.Default()
 
 	authRoutes := r.Group("/auth")

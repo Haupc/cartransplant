@@ -12,6 +12,7 @@ var auth *authService
 
 // AuthService interface
 type AuthService interface {
+	Register(username, password string) (bool, error)
 	Login(username, password string) (interface{}, error)
 	RefreshToken(userID, refreshToken string) (interface{}, error)
 }
@@ -19,6 +20,11 @@ type authService struct {
 	userRepo   repository.UserRepo
 	jwtService JwtService
 	userCache  cache.Cache
+}
+
+func (a *authService) Register(username, password string) (bool, error) {
+
+	return true, nil
 }
 
 func (a *authService) Login(username, password string) (interface{}, error) {
