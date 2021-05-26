@@ -1,7 +1,15 @@
 package car
 
-type carServer struct{}
+import (
+	"github.com/haupc/cartransplant/car/service"
+)
+
+type carServer struct {
+	TripService service.TripService
+}
 
 func NewCarServer() *carServer {
-	return &carServer{}
+	return &carServer{
+		TripService: service.GetTripService(),
+	}
 }
