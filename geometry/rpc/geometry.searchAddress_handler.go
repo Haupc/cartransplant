@@ -2,10 +2,8 @@ package geometry
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/golang/glog"
-	"github.com/haupc/cartransplant/geometry/dto"
 	"github.com/haupc/cartransplant/grpcproto"
 	"github.com/haupc/cartransplant/utils/httputils"
 )
@@ -28,15 +26,8 @@ func (g *geometryServer) SearchAddress(ctx context.Context, req *grpcproto.Searc
 		glog.Errorf("GetCurrentAddress - Error: %v", err)
 		return nil, err
 	}
-	var responseObj dto.SearchAddressRawResponse
-	err = json.Unmarshal(response, &responseObj)
-	if err != nil {
-		glog.Errorf("GetCurrentAddress - Error: %v", err)
-		return nil, err
-	}
-	byteResponse, err := json.Marshal(responseObj.Normalize())
 	grpcResponse := &grpcproto.JsonResponse{
-		JsonResponse: byteResponse,
+		JsonResponse: response,
 	}
 	return grpcResponse, err
 }
