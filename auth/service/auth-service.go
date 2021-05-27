@@ -1,9 +1,11 @@
 package service
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/haupc/cartransplant/auth/dto"
+	"github.com/haupc/cartransplant/auth/model"
 	"github.com/haupc/cartransplant/auth/repository"
 	"github.com/haupc/cartransplant/cache"
 )
@@ -23,8 +25,19 @@ type authService struct {
 }
 
 func (a *authService) Register(username, password string) (bool, error) {
-
-	return true, nil
+	existed, err := a.userRepo.FindByUsername(username)
+	if err != nil {
+		return false, err
+	}
+	if existed != nil {
+		return false, errors.New("Username existed")
+	}
+	userModel := &model.User{
+		Username: username,
+		Password: password,
+		Name:     username,
+	}
+	return a.userRepo.CreateUser(userModel)
 }
 
 func (a *authService) Login(username, password string) (interface{}, error) {
