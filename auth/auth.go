@@ -21,6 +21,7 @@ func main() {
 
 	authRoutes := r.Group("/auth")
 	{
+		authRoutes.POST("/register", authController.Register)
 		authRoutes.POST("/login", authController.Login)
 		authRoutes.POST("/logout", middleware.Authorize(), authController.Logout)
 		authRoutes.POST("/refesh-token", middleware.Authorize(), authController.RefeshToken)
