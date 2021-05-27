@@ -14,6 +14,7 @@ var userRepository *userRepo
 
 // UserRepo interact with db
 type UserRepo interface {
+	CountByUsername(username string) (int32, error)
 	CreateUser(user *model.User) (bool, error)
 	FindByUserModel(user *model.User) (*model.User, error)
 	FindByUsername(username string) (*model.User, error)
@@ -51,11 +52,23 @@ func (ur *userRepo) FindByUserModel(userModel *model.User) (*model.User, error) 
 	return &user, nil
 }
 
+func (ur *userRepo) CountByUsername(username string) (int32, error) {
+	var result int32
+	var err error
+	if err = userRepository.db.Raw("select count(*) from public.user where username = ?", username).Take(&result).Error; err != nil {
+		log.Println("FindByUsername - Error: %v", err)
+		return 0, err
+	}
+
+	return result, err
+}
+
 func (ur *userRepo) FindByUsername(username string) (*model.User, error) {
 	var user model.User
 	var err error
 	if err = userRepository.db.Raw("select * from public.user where username = ?", username).Take(&user).Error; err != nil {
-		err = errors.New("wrong username or password")
+		log.Println("FindByUsername - Error: %v", err)
+		return nil, err
 	}
 
 	return &user, err
@@ -66,6 +79,7 @@ func (ur *userRepo) FindByUserAndPassword(username, password string) (*model.Use
 	var err error
 	if err = userRepository.db.Raw("select * from public.user where username = ? and password = ?", username, password).Take(&user).Error; err != nil {
 		err = errors.New("wrong username or password")
+		return nil, err
 	}
 
 	return &user, err

@@ -25,11 +25,11 @@ type authService struct {
 }
 
 func (a *authService) Register(username, password string) (bool, error) {
-	existed, err := a.userRepo.FindByUsername(username)
+	existed, err := a.userRepo.CountByUsername(username)
 	if err != nil {
 		return false, err
 	}
-	if existed != nil {
+	if existed > 0 {
 		return false, errors.New("Username existed")
 	}
 	userModel := &model.User{
