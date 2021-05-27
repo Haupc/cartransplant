@@ -28,7 +28,7 @@ func (c *carServer) RegisterTrip(ctx context.Context, req *grpcproto.RegisterTri
 	}
 
 	var userID int32 = 32
-	err = c.TripService.CreateTrip(respObj, int32(userID), req.StartTime)
+	err = c.TripService.CreateTrip(respObj, int32(userID), req.BeginLeaveTime, req.EndLeaveTime)
 	if err != nil {
 		log.Printf("RegisterTrip - Error: %v", err)
 		return nil, err

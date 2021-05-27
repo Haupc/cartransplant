@@ -19,7 +19,7 @@ type tripService struct {
 }
 
 type TripService interface {
-	CreateTrip(route dto.RoutingDTO, userID int32, startTime int64) error
+	CreateTrip(route dto.RoutingDTO, userID int32, beginLeaveTime, endLeaveTime int64) error
 	FindTrip(from *grpcproto.Point, to *grpcproto.Point, beginLeaveTime int64, endLeaveTime int64, opt int32) ([]trip_dto.FindTripResponse, error)
 }
 
@@ -32,9 +32,10 @@ func GetTripService() TripService {
 	return _tripService
 }
 
-func (s *tripService) CreateTrip(route dto.RoutingDTO, userID int32, startTime int64) error {
-	timeStartTime := time.Unix(startTime, 0)
-	return s.TripRepo.CreateTrip(route, userID, timeStartTime)
+func (s *tripService) CreateTrip(route dto.RoutingDTO, userID int32, beginLeaveTime, endLeaveTime int64) error {
+	timeStartTime := time.Unix(beginLeaveTime, 0)
+	timeEndTime := time.Unix(endLeaveTime, 0)
+	return s.TripRepo.CreateTrip(route, userID, timeStartTime, timeEndTime)
 }
 
 func (s *tripService) FindTrip(from *grpcproto.Point, to *grpcproto.Point, beginLeaveTime int64, endLeaveTime int64, opt int32) ([]trip_dto.FindTripResponse, error) {
@@ -51,9 +52,10 @@ func (s *tripService) FindTrip(from *grpcproto.Point, to *grpcproto.Point, begin
 			return nil, err
 		}
 		result = append(result, trip_dto.FindTripResponse{
-			Route:     route,
-			UserID:    m.UserID,
-			LeaveTime: m.LeaveTime,
+			Route:          route,
+			UserID:         m.UserID,
+			BeginLeaveTime: m.BeginLeaveTime.Unix(),
+			EndLeaveTime:   m.EndLeaveTime.Unix(),
 		})
 	}
 	return result, nil

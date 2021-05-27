@@ -47,9 +47,10 @@ func (c *carController) RegisterTrip(ctx *gin.Context) {
 		return
 	}
 	request := &grpcproto.RegisterTripRequest{
-		StartTime: registerTripRequest.StartTime,
-		From:      registerTripRequest.From.ToGrpcPoint(),
-		To:        registerTripRequest.To.ToGrpcPoint(),
+		BeginLeaveTime: registerTripRequest.BeginLeaveTime,
+		EndLeaveTime:   registerTripRequest.EndLeaveTime,
+		From:           registerTripRequest.From.ToGrpcPoint(),
+		To:             registerTripRequest.To.ToGrpcPoint(),
 	}
 	respose, err := c.carClient.RegisterTrip(ctx, request)
 	if err != nil {

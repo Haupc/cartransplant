@@ -9,9 +9,10 @@ import (
 // Trip entity
 type Trip struct {
 	gorm.Model
-	WayJson   string
-	UserID    int64
-	LeaveTime time.Time
+	WayJson        string
+	UserID         int64
+	BeginLeaveTime time.Time
+	EndLeaveTime   time.Time
 }
 
 // TableName name of table

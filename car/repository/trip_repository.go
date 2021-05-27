@@ -18,7 +18,7 @@ var tripRepository *tripRepo
 
 // tripRepo interact with db
 type TripRepo interface {
-	CreateTrip(route dto.RoutingDTO, userID int32, startTime time.Time) error
+	CreateTrip(route dto.RoutingDTO, userID int32, beginLeaveTime, endLeaveTime time.Time) error
 	FindTrip(from *grpcproto.Point, to *grpcproto.Point, beginLeaveTime int64, endLeaveTime int64, opt int32) ([]model.Trip, error)
 }
 
@@ -36,13 +36,13 @@ func GettripRepo() TripRepo {
 	return tripRepository
 }
 
-func (r *tripRepo) CreateTrip(route dto.RoutingDTO, userID int32, startTime time.Time) error {
+func (r *tripRepo) CreateTrip(route dto.RoutingDTO, userID int32, beginLeaveTime, endLeaveTime time.Time) error {
 	lineString := makeLineString(route)
 	way_json, _ := json.Marshal(route)
 
-	query := fmt.Sprintf("insert into public.trip (user_id , way, way_json, leave_time)  values (? , %s, ?, ?)", lineString)
+	query := fmt.Sprintf("insert into public.trip (user_id , way, way_json, begin_leave_time, end_leave_time)  values (? , %s, ?, ?, ?)", lineString)
 	log.Printf("CreateTrip query: %s", query)
-	if err := r.db.Exec(query, userID, way_json, startTime).Error; err != nil {
+	if err := r.db.Exec(query, userID, way_json, beginLeaveTime, endLeaveTime).Error; err != nil {
 		log.Printf("CreateTrip query - Error: %v", err)
 		return err
 	}
@@ -64,8 +64,8 @@ func (r *tripRepo) FindTrip(from *grpcproto.Point, to *grpcproto.Point, beginLea
 	default:
 		condition = fmt.Sprintf("ST_Distance(%s, way) + ST_Distance(%s, way)", fromPoint, toPoint)
 	}
-	query := fmt.Sprintf("select * from public.trip where leave_time between ? and ? order by %s asc limit 10", condition)
-	if err := r.db.Raw(query, beginTime, endTime).Find(&tripModel).Error; err != nil {
+	query := fmt.Sprintf("select * from public.trip where begin_leave_time between ? and ?  or end_leave_time between ? and ? order by %s asc limit 10", condition)
+	if err := r.db.Raw(query, beginTime, endTime, beginTime, endTime).Find(&tripModel).Error; err != nil {
 		log.Printf("CreateTrip query - Error: %v", err)
 		return tripModel, err
 	}
