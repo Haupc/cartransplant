@@ -31,7 +31,7 @@ func (g *geometryServer) GetCurrentAddress(ctx context.Context, req *grpcproto.P
 	}
 
 	var responseObj []dto.SearchAddressRawResponse
-	err = json.Unmarshal(response, responseObj)
+	err = json.Unmarshal(response, &responseObj)
 	if err != nil {
 		glog.Errorf("GetCurrentAddress - Error: %v", err)
 		return nil, err
