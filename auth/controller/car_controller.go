@@ -15,6 +15,7 @@ import (
 var _carController *carController
 
 type CarController interface {
+	TakeTrip(ctx *gin.Context)
 	RegisterTrip(ctx *gin.Context)
 	FindTrip(ctx *gin.Context)
 }
@@ -30,6 +31,10 @@ func GetCarController() CarController {
 		}
 	}
 	return _carController
+}
+
+func (c *carController) TakeTrip(ctx *gin.Context) {
+
 }
 
 func (c *carController) RegisterTrip(ctx *gin.Context) {

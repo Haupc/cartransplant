@@ -33,10 +33,10 @@ func GetGeometryController() GeometryController {
 }
 
 func (c *geometryController) GetCurrentAddress(ctx *gin.Context) {
-	latitue := ctx.Query("lat")
+	latitude := ctx.Query("lat")
 	longitude := ctx.Query("long")
 	point := &grpcproto.Point{
-		Latitude:  latitue,
+		Latitude:  latitude,
 		Longitude: longitude,
 	}
 	response, err := c.geomClient.GetCurrentAddress(ctx, point)
