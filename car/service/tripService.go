@@ -8,6 +8,7 @@ import (
 
 	trip_dto "github.com/haupc/cartransplant/car/dto"
 	"github.com/haupc/cartransplant/car/repository"
+	"github.com/haupc/cartransplant/car/utils"
 	"github.com/haupc/cartransplant/geometry/client"
 	"github.com/haupc/cartransplant/geometry/dto"
 
@@ -18,6 +19,7 @@ var _tripService *tripService
 
 type tripService struct {
 	TripRepo repository.TripRepo
+	CarRepo  repository.CarRepo
 }
 
 type TripService interface {
@@ -29,6 +31,7 @@ func GetTripService() TripService {
 	if _tripService == nil {
 		_tripService = &tripService{
 			TripRepo: repository.GettripRepo(),
+			CarRepo:  repository.GetCarRepo(),
 		}
 	}
 	return _tripService
@@ -72,10 +75,15 @@ func (s *tripService) FindTrip(from *grpcproto.Point, to *grpcproto.Point, begin
 		realEndeaveTime := float64(m.EndLeaveTime.Unix()) + subRoute.Routes[0].Duration
 
 		if !(int64(realEndeaveTime) < beginLeaveTime || int64(realBeginLeaveTime) > endLeaveTime) {
-			//TODO: add car infor
+			carModel, err := s.CarRepo.GetCarByID(context.Background(), int(m.CarID))
+			if err != nil {
+				log.Println("Parse json err: ", err)
+				return nil, err
+			}
 			result = append(result, trip_dto.FindTripResponse{
 				Route:          route,
 				UserID:         m.UserID,
+				Car:            utils.CarModelToCarRPC(carModel),
 				BeginLeaveTime: m.BeginLeaveTime.Unix(),
 				EndLeaveTime:   m.EndLeaveTime.Unix(),
 			})

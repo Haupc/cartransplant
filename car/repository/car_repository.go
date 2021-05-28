@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type iCarRepo interface {
+type CarRepo interface {
 	RegisterCar(ctx context.Context, car *model.Car) (err error)
 	GetAllCarByUserID(ctx context.Context, userID int) (cars []*model.Car, err error)
 	GetCarByID(ctx context.Context, carID int) (car *model.Car, err error)
@@ -18,26 +18,27 @@ type iCarRepo interface {
 	DeleteCarByID(ctx context.Context, carID int) (err error)
 }
 
+var (
+	_carRepo *carRepo
+	carMd    = &model.Car{}
+)
+
 // CarRepo interact with car in DB
-type CarRepo struct {
+type carRepo struct {
 	db *gorm.DB
 }
 
-var (
-	carRepo = new(CarRepo)
-	carMd   = &model.Car{}
-)
-
-func GetCarRepo() iCarRepo {
-	if carRepo.db != nil {
-		carRepo.db = config.GetDbConnection()
+func GetCarRepo() CarRepo {
+	if _carRepo == nil {
+		_carRepo = &carRepo{
+			config.GetDbConnection(),
+		}
 	}
-
-	return carRepo
+	return _carRepo
 }
 
 // RegisterCar ...
-func (c *CarRepo) RegisterCar(ctx context.Context, car *model.Car) (err error) {
+func (c *carRepo) RegisterCar(ctx context.Context, car *model.Car) (err error) {
 	if err = c.db.WithContext(ctx).
 		Model(carMd).
 		Save(car).Error; err != nil {
@@ -48,7 +49,7 @@ func (c *CarRepo) RegisterCar(ctx context.Context, car *model.Car) (err error) {
 }
 
 // GetAllCarByUserID ...
-func (c *CarRepo) GetAllCarByUserID(ctx context.Context, userID int) (cars []*model.Car, err error) {
+func (c *carRepo) GetAllCarByUserID(ctx context.Context, userID int) (cars []*model.Car, err error) {
 	rows, err := c.db.WithContext(ctx).
 		Model(carMd).
 		Where("user_id = ? AND deleted = ?", userID, false).Rows()
@@ -64,7 +65,7 @@ func (c *CarRepo) GetAllCarByUserID(ctx context.Context, userID int) (cars []*mo
 	return cars, nil
 }
 
-func (c *CarRepo) scanCars(ctx context.Context, tx *gorm.DB, rows *sql.Rows) (cars []*model.Car, err error) {
+func (c *carRepo) scanCars(ctx context.Context, tx *gorm.DB, rows *sql.Rows) (cars []*model.Car, err error) {
 	for rows.Next() {
 		car := new(model.Car)
 		if err = tx.WithContext(ctx).ScanRows(rows, car); err != nil {
@@ -77,7 +78,7 @@ func (c *CarRepo) scanCars(ctx context.Context, tx *gorm.DB, rows *sql.Rows) (ca
 }
 
 // GetCarByID ...
-func (c *CarRepo) GetCarByID(ctx context.Context, carID int) (car *model.Car, err error) {
+func (c *carRepo) GetCarByID(ctx context.Context, carID int) (car *model.Car, err error) {
 	// alloc
 	car = new(model.Car)
 	if err = c.db.WithContext(ctx).
@@ -91,7 +92,7 @@ func (c *CarRepo) GetCarByID(ctx context.Context, carID int) (car *model.Car, er
 }
 
 // UpdateCarByID ...
-func (c *CarRepo) UpdateCarByID(ctx context.Context, carID int, car *model.Car) (err error) {
+func (c *carRepo) UpdateCarByID(ctx context.Context, carID int, car *model.Car) (err error) {
 	if err = c.db.WithContext(ctx).
 		Model(carMd).
 		Where("id = ? AND deleted = ?", carID, false).
@@ -103,7 +104,7 @@ func (c *CarRepo) UpdateCarByID(ctx context.Context, carID int, car *model.Car) 
 }
 
 // DeleteCarByID ...
-func (c *CarRepo) DeleteCarByID(ctx context.Context, carID int) (err error) {
+func (c *carRepo) DeleteCarByID(ctx context.Context, carID int) (err error) {
 	if err = c.db.WithContext(ctx).
 		Model(carMd).
 		Where("id = ?", carID).
