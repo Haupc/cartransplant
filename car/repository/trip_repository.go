@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/haupc/cartransplant/auth/config"
-	"github.com/haupc/cartransplant/base"
 	"github.com/haupc/cartransplant/car/model"
 	"github.com/haupc/cartransplant/geometry/dto"
 	"github.com/haupc/cartransplant/grpcproto"
@@ -18,8 +17,8 @@ var tripRepository *tripRepo
 
 // tripRepo interact with db
 type TripRepo interface {
-	CreateTrip(route dto.RoutingDTO, userID int32, beginLeaveTime, endLeaveTime time.Time) error
-	FindTrip(from *grpcproto.Point, to *grpcproto.Point, beginLeaveTime int64, endLeaveTime int64, opt int32) ([]model.Trip, error)
+	CreateTrip(route dto.RoutingDTO, userID int32, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime time.Time) error
+	FindTrip(from *grpcproto.Point, to *grpcproto.Point) ([]model.Trip, error)
 }
 
 type tripRepo struct {
@@ -36,36 +35,31 @@ func GettripRepo() TripRepo {
 	return tripRepository
 }
 
-func (r *tripRepo) CreateTrip(route dto.RoutingDTO, userID int32, beginLeaveTime, endLeaveTime time.Time) error {
+func (r *tripRepo) CreateTrip(route dto.RoutingDTO, userID int32, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime time.Time) error {
 	lineString := makeLineString(route)
 	way_json, _ := json.Marshal(route)
 
-	query := fmt.Sprintf("insert into public.trip (user_id , way, way_json, begin_leave_time, end_leave_time)  values (? , %s, ?, ?, ?)", lineString)
+	query := fmt.Sprintf("insert into public.trip (user_id, car_id, max_distance, way, way_json, begin_leave_time, end_leave_time)  values (?, ?, ? , %s, ?, ?, ?)", lineString)
 	log.Printf("CreateTrip query: %s", query)
-	if err := r.db.Exec(query, userID, way_json, beginLeaveTime, endLeaveTime).Error; err != nil {
+	if err := r.db.Exec(query, userID, carID, maxDistance, way_json, beginLeaveTime, endLeaveTime).Error; err != nil {
 		log.Printf("CreateTrip query - Error: %v", err)
 		return err
 	}
 	return nil
 }
 
-func (r *tripRepo) FindTrip(from *grpcproto.Point, to *grpcproto.Point, beginLeaveTime int64, endLeaveTime int64, opt int32) ([]model.Trip, error) {
+// FindTrip conditions:
+// 1: summary distance < max_distance
+// 2: eta trip from -> from between ...
+func (r *tripRepo) FindTrip(from *grpcproto.Point, to *grpcproto.Point) ([]model.Trip, error) {
 	var tripModel []model.Trip
 	fromPoint := makePoint(from)
 	toPoint := makePoint(to)
-	beginTime := time.Unix(beginLeaveTime, 0)
-	endTime := time.Unix(endLeaveTime, 0)
-	var condition string
-	switch opt {
-	case base.NEAR_START:
-		condition = fmt.Sprintf("ST_Distance(%s, way)", fromPoint)
-	case base.NEAR_END:
-		condition = fmt.Sprintf("ST_Distance(%s, way)", toPoint)
-	default:
-		condition = fmt.Sprintf("ST_Distance(%s, way) + ST_Distance(%s, way)", fromPoint, toPoint)
-	}
-	query := fmt.Sprintf("select * from public.trip where begin_leave_time between ? and ?  or end_leave_time between ? and ? order by %s asc limit 10", condition)
-	if err := r.db.Raw(query, beginTime, endTime, beginTime, endTime).Find(&tripModel).Error; err != nil {
+
+	condition := fmt.Sprintf("ST_Distance(%s, way) + ST_Distance(%s, way)", fromPoint, toPoint)
+
+	query := fmt.Sprintf("select * from public.trip where %s < max_distance order by %s asc limit 10", condition, condition)
+	if err := r.db.Raw(query).Find(&tripModel).Error; err != nil {
 		log.Printf("CreateTrip query - Error: %v", err)
 		return tripModel, err
 	}

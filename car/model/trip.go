@@ -13,6 +13,8 @@ type Trip struct {
 	UserID         int64
 	BeginLeaveTime time.Time
 	EndLeaveTime   time.Time
+	CarID          int64
+	MaxDistance    int32
 }
 
 // TableName name of table
