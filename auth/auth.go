@@ -39,7 +39,7 @@ func main() {
 	carRoutes := r.Group("/car")
 	{
 		carRoutes.POST("/register-trip", carController.RegisterTrip)
-		carRoutes.GET("/find-trip", carController.FindTrip)
+		carRoutes.POST("/find-trip", carController.FindTrip)
 	}
 	r.Run(":8080")
 }
