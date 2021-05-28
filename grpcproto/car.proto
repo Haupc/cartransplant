@@ -20,10 +20,24 @@ message findTripRequest {
     int32 option = 5;
 }
 
+message carObject {
+    int32 id = 1;
+    string licensePlate = 2;
+    string color = 3;
+    string model = 4;
+}
+
+message listCarResponse {
+    repeated carObject cars = 1;
+}
+
 service car {
     // driver
     rpc registerTrip(registerTripRequest) returns (grpcproto.bool);
-    
+    rpc registerCar(carObject) returns (grpcproto.bool);
+    rpc listMyCar(int) returns (listCarResponse);
+    rpc updateCar (carObject) returns (grpcproto.bool);
+    rpc deleteCar (int) returns (grpcproto.bool);
     // user
     rpc findTrip(findTripRequest) returns (jsonResponse);
 }
