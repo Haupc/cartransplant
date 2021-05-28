@@ -51,6 +51,8 @@ func (c *carController) RegisterTrip(ctx *gin.Context) {
 		EndLeaveTime:   registerTripRequest.EndLeaveTime,
 		From:           registerTripRequest.From.ToGrpcPoint(),
 		To:             registerTripRequest.To.ToGrpcPoint(),
+		MaxDistance:    registerTripRequest.MaxDistance,
+		CarID:          registerTripRequest.CarID,
 	}
 	respose, err := c.carClient.RegisterTrip(ctx, request)
 	if err != nil {
