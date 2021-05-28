@@ -1,2 +1,3 @@
 .vscode/
 export.sh
+pm2.sh

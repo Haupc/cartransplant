@@ -6,10 +6,12 @@ import "geometry.proto";
 import "common.proto";
 
 message registerTripRequest {
-    int64 beginLeaveTime = 1;
-    int64 endLeaveTime = 2;
-    point from = 3;
-    point to = 4;
+    int64 carID = 1;
+    int64 beginLeaveTime = 2;
+    int64 endLeaveTime = 3;
+    point from = 4;
+    point to = 5;
+    int32 maxDistance = 6;
 }
 
 message findTripRequest {
