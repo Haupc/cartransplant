@@ -1,13 +1,17 @@
 package model
 
-import "gorm.io/gorm"
+import "time"
 
 type Car struct {
-	gorm.Model
-	UserID       int64  `json:"user_id"`
-	LicensePlate string `json:"license_plate"`
-	Color        string `json:"color"`
-	CarModel     string `json:"model" gorm:"column:model"`
+	ID           int    `gorm:"Column:id; Type:int4; primarykey"`
+	UserID       int    `gorm:"Column:user_id; Type:int8"`
+	LicensePlate string `gorm:"Column:license_plate; Type:varchar(19)"`
+	Color        string `gorm:"Column:color; Type:varchar"`
+	Model        string `gorm:"Column:model; Type:varchar"`
+	Deleted      bool   `gorm:"Column:deleted; Type:bool; Default:false"`
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	DeletedAt    time.Time
 }
 
 // TableName name of table
