@@ -31,8 +31,9 @@ func (c *carServer) RegisterCar(ctx context.Context, car *grpcproto.CarObject) (
 }
 
 // ListMyCar ...
-func (c *carServer) ListMyCar(ctx context.Context, userID *grpcproto.Int) (resp *grpcproto.ListCarResponse, err error) {
-	carsDB, err := repository.GetCarRepo().GetAllCarByUserID(ctx, int(userID.Value))
+func (c *carServer) ListMyCar(ctx context.Context, limit *grpcproto.Int) (resp *grpcproto.ListCarResponse, err error) {
+	userID := 32
+	carsDB, err := repository.GetCarRepo().GetAllCarByUserID(ctx, userID, int(limit.Value))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

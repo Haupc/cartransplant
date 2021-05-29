@@ -8,16 +8,22 @@ type Maneuver struct {
 	Modifier      string    `json:"modifier"`
 	Type          string    `json:"type"`
 }
-
+type Intersection struct {
+	Out      int       `json:"out"`
+	Entry    []bool    `json:"entry"`
+	Bearings []int     `json:"bearings"`
+	Location []float64 `json:"location"`
+}
 type Step struct {
-	Maneuver    `json:"maneuver,omitempty"`
-	Mode        string  `json:"mode"`
-	DrivingSide string  `json:"driving_side"`
-	Name        string  `json:"name"`
-	Weight      float64 `json:"weight"`
-	Duration    float64 `json:"duration"`
-	Distance    float64 `json:"distance"`
-	Ref         string  `json:"ref,omitempty"`
+	Maneuver      `json:"maneuver,omitempty"`
+	Mode          string         `json:"mode"`
+	DrivingSide   string         `json:"driving_side"`
+	Name          string         `json:"name"`
+	Weight        float64        `json:"weight"`
+	Duration      float64        `json:"duration"`
+	Distance      float64        `json:"distance"`
+	Ref           string         `json:"ref,omitempty"`
+	Intersections []Intersection `json:"intersections"`
 }
 
 type Leg struct {

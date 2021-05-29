@@ -12,7 +12,7 @@ import (
 
 type CarRepo interface {
 	RegisterCar(ctx context.Context, car *model.Car) (err error)
-	GetAllCarByUserID(ctx context.Context, userID int) (cars []*model.Car, err error)
+	GetAllCarByUserID(ctx context.Context, userID int, limit int) (cars []*model.Car, err error)
 	GetCarByID(ctx context.Context, carID int) (car *model.Car, err error)
 	UpdateCarByID(ctx context.Context, carID int, car *model.Car) (err error)
 	DeleteCarByID(ctx context.Context, carID int) (err error)
@@ -20,7 +20,6 @@ type CarRepo interface {
 
 var (
 	_carRepo *carRepo
-	carMd    = &model.Car{}
 )
 
 // CarRepo interact with car in DB
@@ -40,7 +39,7 @@ func GetCarRepo() CarRepo {
 // RegisterCar ...
 func (c *carRepo) RegisterCar(ctx context.Context, car *model.Car) (err error) {
 	if err = c.db.WithContext(ctx).
-		Model(carMd).
+		Model(&model.Car{}).
 		Save(car).Error; err != nil {
 		return err
 	}
@@ -49,10 +48,10 @@ func (c *carRepo) RegisterCar(ctx context.Context, car *model.Car) (err error) {
 }
 
 // GetAllCarByUserID ...
-func (c *carRepo) GetAllCarByUserID(ctx context.Context, userID int) (cars []*model.Car, err error) {
+func (c *carRepo) GetAllCarByUserID(ctx context.Context, userID int, limit int) (cars []*model.Car, err error) {
 	rows, err := c.db.WithContext(ctx).
-		Model(carMd).
-		Where("user_id = ? AND deleted = ?", userID, false).Rows()
+		Model(&model.Car{}).
+		Where("user_id = ? AND deleted = ? limit ?", userID, false, limit).Rows()
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +81,7 @@ func (c *carRepo) GetCarByID(ctx context.Context, carID int) (car *model.Car, er
 	// alloc
 	car = new(model.Car)
 	if err = c.db.WithContext(ctx).
-		Model(carMd).
+		Model(&model.Car{}).
 		Where("id = ? AND deleted = ?", carID, false).
 		Take(car).Error; err != nil {
 		return nil, err
@@ -94,7 +93,7 @@ func (c *carRepo) GetCarByID(ctx context.Context, carID int) (car *model.Car, er
 // UpdateCarByID ...
 func (c *carRepo) UpdateCarByID(ctx context.Context, carID int, car *model.Car) (err error) {
 	if err = c.db.WithContext(ctx).
-		Model(carMd).
+		Model(&model.Car{}).
 		Where("id = ? AND deleted = ?", carID, false).
 		Updates(car).Error; err != nil {
 		return err
@@ -106,10 +105,10 @@ func (c *carRepo) UpdateCarByID(ctx context.Context, carID int, car *model.Car) 
 // DeleteCarByID ...
 func (c *carRepo) DeleteCarByID(ctx context.Context, carID int) (err error) {
 	if err = c.db.WithContext(ctx).
-		Model(carMd).
+		Model(&model.Car{}).
 		Where("id = ?", carID).
 		Update("deleted", true).
-		Update("deleted_at", time.Now).Error; err != nil {
+		Update("deleted_at", time.Now()).Error; err != nil {
 		return err
 	}
 

@@ -20,6 +20,9 @@ func RouteResponseToDTO(response *dto.RouteResponse) dto.RoutingDTO {
 		steps := []dto.StepDTO{}
 		for _, step := range route.Legs[0].Steps {
 			steps = append(steps, StepToStepDTO(step))
+			for _, i := range step.Intersections {
+				steps = append(steps, IntersectionToStepDTO(i, step.Name))
+			}
 		}
 		result.Routes = append(result.Routes, dto.RouteDTO{
 			Steps: steps,
@@ -48,5 +51,12 @@ func StepToStepDTO(step dto.Step) dto.StepDTO {
 	return dto.StepDTO{
 		Name:     step.Name,
 		Location: LocationToPointDTO(step.Location),
+	}
+}
+
+func IntersectionToStepDTO(intersection dto.Intersection, name string) dto.StepDTO {
+	return dto.StepDTO{
+		Name:     name,
+		Location: LocationToPointDTO(intersection.Location),
 	}
 }
