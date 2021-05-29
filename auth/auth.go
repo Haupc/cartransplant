@@ -40,6 +40,10 @@ func main() {
 	{
 		carRoutes.POST("/register-trip", carController.RegisterTrip)
 		carRoutes.POST("/find-trip", carController.FindTrip)
+		carRoutes.POST("/register-car", carController.RegisterCar)
+		carRoutes.PUT("/update-car", carController.UpdateCar)
+		carRoutes.DELETE("/delete-car", carController.DeleteCar)
+		carRoutes.GET("/list-my-car", carController.ListMyCar)
 	}
 	r.Run(":8080")
 }

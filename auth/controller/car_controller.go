@@ -3,7 +3,9 @@ package controller
 import (
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/haupc/cartransplant/auth/utils"
@@ -18,6 +20,10 @@ type CarController interface {
 	TakeTrip(ctx *gin.Context)
 	RegisterTrip(ctx *gin.Context)
 	FindTrip(ctx *gin.Context)
+	RegisterCar(ctx *gin.Context)
+	UpdateCar(ctx *gin.Context)
+	DeleteCar(ctx *gin.Context)
+	ListMyCar(ctx *gin.Context)
 }
 
 type carController struct {
@@ -33,8 +39,73 @@ func GetCarController() CarController {
 	return _carController
 }
 
-func (c *carController) TakeTrip(ctx *gin.Context) {
+func (c *carController) ListMyCar(ctx *gin.Context) {
+	limitString := ctx.Query("limit")
+	limit, err := strconv.Atoi(limitString)
+	if err != nil || limit <= 0 {
+		log.Printf("Parse limit err")
+		limit = 10
+	}
+	respose, err := c.carClient.ListMyCar(ctx, &grpcproto.Int{Value: int64(limit)})
+	ctx.JSON(http.StatusOK, utils.BuildResponse(true, "success", respose.Cars))
+}
 
+func (c *carController) DeleteCar(ctx *gin.Context) {
+	idString := ctx.Query("id")
+	id, err := strconv.Atoi(idString)
+	if err != nil {
+		respose := utils.BuildErrorResponse("Request wrong format", err.Error(), nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	respose, err := c.carClient.DeleteCar(ctx, &grpcproto.Int{Value: int64(id)})
+	if err != nil {
+		respose := utils.BuildErrorResponse("Something wrong happened", err.Error(), nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	ctx.JSON(http.StatusOK, utils.BuildResponse(respose.Value, "success", nil))
+}
+
+func (c *carController) UpdateCar(ctx *gin.Context) {
+	var updateCarRequest grpcproto.CarObject
+	body, _ := ioutil.ReadAll(ctx.Request.Body)
+	err := json.Unmarshal(body, &updateCarRequest)
+	if err != nil {
+		respose := utils.BuildErrorResponse("Request wrong format", err.Error(), body)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	respose, err := c.carClient.UpdateCar(ctx, &updateCarRequest)
+	if err != nil {
+		respose := utils.BuildErrorResponse("Something wrong happened", err.Error(), body)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	ctx.JSON(http.StatusOK, utils.BuildResponse(respose.Value, "success", nil))
+}
+
+func (c *carController) RegisterCar(ctx *gin.Context) {
+	var registerCarRequest grpcproto.CarObject
+	body, _ := ioutil.ReadAll(ctx.Request.Body)
+	err := json.Unmarshal(body, &registerCarRequest)
+	if err != nil {
+		respose := utils.BuildErrorResponse("Request wrong format", err.Error(), body)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	respose, err := c.carClient.RegisterCar(ctx, &registerCarRequest)
+	if err != nil {
+		respose := utils.BuildErrorResponse("Something wrong happened", err.Error(), body)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	ctx.JSON(http.StatusOK, utils.BuildResponse(respose.Value, "success", nil))
+
+}
+
+func (c *carController) TakeTrip(ctx *gin.Context) {
+	//TODO: take trip
 }
 
 func (c *carController) RegisterTrip(ctx *gin.Context) {
