@@ -15,6 +15,7 @@ type Trip struct {
 	EndLeaveTime   time.Time
 	CarID          int64
 	MaxDistance    int32
+	FeeEachKm      int64
 }
 
 // TableName name of table

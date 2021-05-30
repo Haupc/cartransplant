@@ -124,6 +124,7 @@ func (c *carController) RegisterTrip(ctx *gin.Context) {
 		To:             registerTripRequest.To.ToGrpcPoint(),
 		MaxDistance:    registerTripRequest.MaxDistance,
 		CarID:          registerTripRequest.CarID,
+		FeeEachKm:      registerTripRequest.FeeEachKm,
 	}
 	respose, err := c.carClient.RegisterTrip(ctx, request)
 	if err != nil {

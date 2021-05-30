@@ -25,7 +25,9 @@ func RouteResponseToDTO(response *dto.RouteResponse) dto.RoutingDTO {
 			}
 		}
 		result.Routes = append(result.Routes, dto.RouteDTO{
-			Steps: steps,
+			Steps:    steps,
+			Distance: route.Distance,
+			Duration: route.Duration,
 		})
 	}
 	return result

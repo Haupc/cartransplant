@@ -12,6 +12,7 @@ message registerTripRequest {
     point from = 4;
     point to = 5;
     int32 maxDistance = 6;
+    int64 feeEachKm = 7;
 }
 
 message findTripRequest {

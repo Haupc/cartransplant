@@ -39,3 +39,15 @@ func Authorize() gin.HandlerFunc {
 		}
 	}
 }
+
+func AuthorizeJWTFirebase() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			response := utils.BuildErrorResponse("Authorization fail", "Token not found", nil)
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
+			return
+		}
+		log.Println("token:", authHeader)
+	}
+}

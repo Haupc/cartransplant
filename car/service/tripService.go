@@ -23,7 +23,7 @@ type tripService struct {
 }
 
 type TripService interface {
-	CreateTrip(route dto.RoutingDTO, userID int32, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime int64) error
+	CreateTrip(route dto.RoutingDTO, userID int32, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime, priceEachKm int64) error
 	FindTrip(from *grpcproto.Point, to *grpcproto.Point, beginLeaveTime int64, endLeaveTime int64, opt int32) ([]trip_dto.FindTripResponse, error)
 }
 
@@ -37,10 +37,10 @@ func GetTripService() TripService {
 	return _tripService
 }
 
-func (s *tripService) CreateTrip(route dto.RoutingDTO, userID int32, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime int64) error {
+func (s *tripService) CreateTrip(route dto.RoutingDTO, userID int32, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime, priceEachKm int64) error {
 	timeStartTime := time.Unix(beginLeaveTime, 0)
 	timeEndTime := time.Unix(endLeaveTime, 0)
-	return s.TripRepo.CreateTrip(route, userID, carID, maxDistance, timeStartTime, timeEndTime)
+	return s.TripRepo.CreateTrip(route, userID, carID, maxDistance, timeStartTime, timeEndTime, priceEachKm)
 }
 
 func (s *tripService) FindTrip(from *grpcproto.Point, to *grpcproto.Point, beginLeaveTime int64, endLeaveTime int64, opt int32) ([]trip_dto.FindTripResponse, error) {
@@ -48,6 +48,9 @@ func (s *tripService) FindTrip(from *grpcproto.Point, to *grpcproto.Point, begin
 	if err != nil {
 		return nil, err
 	}
+	// Distance calculator
+	distance := utils.Distance(from, to)
+
 	var result []trip_dto.FindTripResponse
 	for _, m := range models {
 		var route dto.RoutingDTO
@@ -86,6 +89,7 @@ func (s *tripService) FindTrip(from *grpcproto.Point, to *grpcproto.Point, begin
 				Car:            utils.CarModelToCarRPC(carModel),
 				BeginLeaveTime: m.BeginLeaveTime.Unix(),
 				EndLeaveTime:   m.EndLeaveTime.Unix(),
+				Price:          m.FeeEachKm * distance / 1000,
 			})
 		}
 	}

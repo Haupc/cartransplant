@@ -59,6 +59,7 @@ func (c *geometryController) GetCurrentAddress(ctx *gin.Context) {
 func (c *geometryController) SearchAddress(ctx *gin.Context) {
 	query := ctx.Query("query")
 	query, _ = base.Normalize(query)
+	glog.V(4).Infof("SearchAddress - query: %s", query)
 	if query == "" {
 		errResp := utils.BuildErrorResponse("Invalid Request", "Query Empty", nil)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, errResp)

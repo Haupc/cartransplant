@@ -23,12 +23,12 @@ func main() {
 	{
 		authRoutes.POST("/register", authController.Register)
 		authRoutes.POST("/login", authController.Login)
-		authRoutes.POST("/logout", middleware.Authorize(), authController.Logout)
-		authRoutes.POST("/refesh-token", middleware.Authorize(), authController.RefeshToken)
+		authRoutes.POST("/logout", middleware.AuthorizeJWTFirebase(), authController.Logout)
+		authRoutes.POST("/refesh-token", middleware.AuthorizeJWTFirebase(), authController.RefeshToken)
 	}
 
 	// resourceRoutes := r.Group("/geometry", middleware.Authorize())
-	geometryRoutes := r.Group("/geometry")
+	geometryRoutes := r.Group("/geometry", middleware.AuthorizeJWTFirebase())
 	{
 		// resourceRoutes.GET("/crawl-category", crawlController.CrawlCategory)
 		geometryRoutes.GET("/current-address", geometryController.GetCurrentAddress)
@@ -36,7 +36,7 @@ func main() {
 		geometryRoutes.GET("/search-address", geometryController.SearchAddress)
 
 	}
-	carRoutes := r.Group("/car")
+	carRoutes := r.Group("/car", middleware.AuthorizeJWTFirebase())
 	{
 		carRoutes.POST("/register-trip", carController.RegisterTrip)
 		carRoutes.POST("/find-trip", carController.FindTrip)
