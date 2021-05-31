@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"log"
 	"net/http"
 
@@ -75,13 +76,16 @@ func AuthorizeJWTFirebase() gin.HandlerFunc {
 	}
 }
 
-func GetMetadataFromContext(ctx *gin.Context) *dto.Metadata {
-	metadata, exist := ctx.Get("user_info")
-	if !exist {
+func GetMetadataFromContext(ctx context.Context) *dto.Metadata {
+	if ginContext, ok := ctx.(*gin.Context); ok {
+		metadata, exist := ginContext.Get("user_info")
+		if !exist {
+			return nil
+		}
+		if userData, ok := metadata.(dto.Metadata); ok {
+			return &userData
+		}
 		return nil
-	}
-	if userData, ok := metadata.(dto.Metadata); ok {
-		return &userData
 	}
 	return nil
 }
