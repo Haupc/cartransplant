@@ -1,17 +1,28 @@
 package dto
 
+type Address struct {
+	Road        string `json:"road"`
+	Suburb      string `json:"suburb"`
+	City        string `json:"city"`
+	County      string `json:"county"`
+	Postcode    string `json:"postcode"`
+	Country     string `json:"country"`
+	CountryCode string `json:"country_code"`
+}
+
 type SearchAddressRawResponse struct {
-	Boundingbox []string `json:"boundingbox"`
-	Class       string   `json:"class"`
-	DisplayName string   `json:"display_name"`
-	Importance  float64  `json:"importance"`
-	Lat         string   `json:"lat"`
-	Licence     string   `json:"licence"`
-	Lon         string   `json:"lon"`
-	OsmID       int      `json:"osm_id"`
-	OsmType     string   `json:"osm_type"`
-	PlaceID     int      `json:"place_id"`
-	Type        string   `json:"type"`
+	Boundingbox []string `json:"boundingbox,omitempty"`
+	Class       string   `json:"class,omitempty"`
+	DisplayName string   `json:"display_name,omitempty"`
+	Importance  float64  `json:"importance,omitempty"`
+	Lat         string   `json:"lat,omitempty"`
+	Licence     string   `json:"licence,omitempty"`
+	Lon         string   `json:"lon,omitempty"`
+	OsmID       int      `json:"osm_id,omitempty"`
+	OsmType     string   `json:"osm_type,omitempty"`
+	PlaceID     int      `json:"place_id,omitempty"`
+	Type        string   `json:"type,omitempty"`
+	Address     Address  `json:"address,omitempty"`
 }
 
 type SearchAddressResponse struct {
