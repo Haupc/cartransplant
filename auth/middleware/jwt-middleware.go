@@ -69,6 +69,7 @@ func AuthorizeJWTFirebase() gin.HandlerFunc {
 			return
 		}
 		dsnap.DataTo(&metadata)
+		metadata.UserID = token.UID
 		c.Set("user_info", metadata)
 		log.Printf("user_info: %#v\n", metadata)
 	}
