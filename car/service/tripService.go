@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log"
 	"time"
 
@@ -40,6 +41,14 @@ func GetTripService() TripService {
 func (s *tripService) CreateTrip(route dto.RoutingDTO, userID int32, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime, priceEachKm int64) error {
 	timeStartTime := time.Unix(beginLeaveTime, 0)
 	timeEndTime := time.Unix(endLeaveTime, 0)
+	carModel, err := s.CarRepo.GetCarByID(context.Background(), int(carID))
+	if err != nil {
+		return err
+	}
+	if carModel == nil {
+		return errors.New("Car not existed")
+
+	}
 	return s.TripRepo.CreateTrip(route, userID, carID, maxDistance, timeStartTime, timeEndTime, priceEachKm)
 }
 

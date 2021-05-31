@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/haupc/cartransplant/auth/config"
+	"github.com/haupc/cartransplant/auth/dto"
 	"github.com/haupc/cartransplant/auth/service"
 	"github.com/haupc/cartransplant/auth/utils"
 	"github.com/haupc/cartransplant/cache"
@@ -60,8 +61,26 @@ func AuthorizeJWTFirebase() gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
 		}
-		log.Println("token:", token)
-		//TODO: claim
-		//TODO: get extra info
+		var metadata dto.Metadata
+		dsnap, err := config.GetFireStoreClient().Collection("users").Doc(token.UID).Get(c)
+		if err != nil {
+			response := utils.BuildErrorResponse("Authorization fail", err.Error(), nil)
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
+			return
+		}
+		dsnap.DataTo(&metadata)
+		c.Set("user_info", metadata)
+		log.Printf("user_info: %#v\n", metadata)
 	}
+}
+
+func GetMetadataFromContext(ctx *gin.Context) *dto.Metadata {
+	metadata, exist := ctx.Get("user_info")
+	if !exist {
+		return nil
+	}
+	if userData, ok := metadata.(dto.Metadata); ok {
+		return &userData
+	}
+	return nil
 }
