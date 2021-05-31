@@ -12,7 +12,7 @@ import (
 
 type CarRepo interface {
 	RegisterCar(ctx context.Context, car *model.Car) (err error)
-	GetAllCarByUserID(ctx context.Context, userID int, limit int) (cars []*model.Car, err error)
+	GetAllCarByUserID(ctx context.Context, userID string, limit int) (cars []*model.Car, err error)
 	GetCarByID(ctx context.Context, carID int) (car *model.Car, err error)
 	UpdateCarByID(ctx context.Context, carID int, car *model.Car) (err error)
 	DeleteCarByID(ctx context.Context, carID int) (err error)
@@ -48,7 +48,7 @@ func (c *carRepo) RegisterCar(ctx context.Context, car *model.Car) (err error) {
 }
 
 // GetAllCarByUserID ...
-func (c *carRepo) GetAllCarByUserID(ctx context.Context, userID int, limit int) (cars []*model.Car, err error) {
+func (c *carRepo) GetAllCarByUserID(ctx context.Context, userID string, limit int) (cars []*model.Car, err error) {
 	rows, err := c.db.WithContext(ctx).
 		Model(&model.Car{}).
 		Where("user_id = ? AND deleted = ? limit ?", userID, false, limit).Rows()

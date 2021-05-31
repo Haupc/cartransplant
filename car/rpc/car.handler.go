@@ -3,6 +3,7 @@ package car
 import (
 	"context"
 
+	"github.com/haupc/cartransplant/auth/middleware"
 	"github.com/haupc/cartransplant/car/model"
 	"github.com/haupc/cartransplant/car/repository"
 	"github.com/haupc/cartransplant/car/utils"
@@ -32,8 +33,8 @@ func (c *carServer) RegisterCar(ctx context.Context, car *grpcproto.CarObject) (
 
 // ListMyCar ...
 func (c *carServer) ListMyCar(ctx context.Context, limit *grpcproto.Int) (resp *grpcproto.ListCarResponse, err error) {
-	userID := 32
-	carsDB, err := repository.GetCarRepo().GetAllCarByUserID(ctx, userID, int(limit.Value))
+	md := middleware.GetMetadataFromContext(ctx)
+	carsDB, err := repository.GetCarRepo().GetAllCarByUserID(ctx, md.UserID, int(limit.Value))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

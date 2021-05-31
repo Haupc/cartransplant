@@ -24,7 +24,7 @@ type tripService struct {
 }
 
 type TripService interface {
-	CreateTrip(route dto.RoutingDTO, userID int32, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime, priceEachKm int64) error
+	CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime, priceEachKm int64) error
 	FindTrip(from *grpcproto.Point, to *grpcproto.Point, beginLeaveTime int64, endLeaveTime int64, opt int32) ([]trip_dto.FindTripResponse, error)
 }
 
@@ -38,7 +38,7 @@ func GetTripService() TripService {
 	return _tripService
 }
 
-func (s *tripService) CreateTrip(route dto.RoutingDTO, userID int32, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime, priceEachKm int64) error {
+func (s *tripService) CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime, priceEachKm int64) error {
 	timeStartTime := time.Unix(beginLeaveTime, 0)
 	timeEndTime := time.Unix(endLeaveTime, 0)
 	carModel, err := s.CarRepo.GetCarByID(context.Background(), int(carID))

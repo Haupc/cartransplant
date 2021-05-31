@@ -17,7 +17,7 @@ var tripRepository *tripRepo
 
 // tripRepo interact with db
 type TripRepo interface {
-	CreateTrip(route dto.RoutingDTO, userID int32, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime time.Time, priceEachKm int64) error
+	CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime time.Time, priceEachKm int64) error
 	FindTrip(from *grpcproto.Point, to *grpcproto.Point) ([]model.Trip, error)
 }
 
@@ -35,7 +35,7 @@ func GettripRepo() TripRepo {
 	return tripRepository
 }
 
-func (r *tripRepo) CreateTrip(route dto.RoutingDTO, userID int32, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime time.Time, priceEachKm int64) error {
+func (r *tripRepo) CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime time.Time, priceEachKm int64) error {
 	lineString := makeLineString(route)
 	way_json, _ := json.Marshal(route)
 
