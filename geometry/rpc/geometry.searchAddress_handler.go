@@ -28,14 +28,17 @@ func (g *geometryServer) SearchAddress(ctx context.Context, req *grpcproto.Searc
 		glog.Errorf("GetCurrentAddress - Error: %v", err)
 		return nil, err
 	}
-	var responseObj dto.SearchAddressRawResponse
+	var responseObj []dto.SearchAddressRawResponse
 	err = json.Unmarshal(response, &responseObj)
 	if err != nil {
 		glog.Errorf("GetCurrentAddress - Error: %v", err)
 		return nil, err
 	}
-
-	byteResponse, err := json.Marshal(responseObj.Normalize())
+	var normalizedResponse []dto.SearchAddressResponse
+	for _, rawResponse := range responseObj {
+		normalizedResponse = append(normalizedResponse, rawResponse.Normalize())
+	}
+	byteResponse, err := json.Marshal(normalizedResponse)
 	grpcResponse := &grpcproto.JsonResponse{
 		JsonResponse: byteResponse,
 	}
