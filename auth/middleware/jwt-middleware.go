@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/haupc/cartransplant/auth/config"
 	"github.com/haupc/cartransplant/auth/service"
 	"github.com/haupc/cartransplant/auth/utils"
 	"github.com/haupc/cartransplant/cache"
@@ -48,6 +49,16 @@ func AuthorizeJWTFirebase() gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
 		}
-		log.Println("token:", authHeader)
+		log.Println("authHeader:", authHeader)
+		authClient := config.GetFirebaseAuthClient()
+		token, err := authClient.VerifyIDToken(c, authHeader)
+		if err != nil {
+			response := utils.BuildErrorResponse("Authorization fail", err.Error(), nil)
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
+			return
+		}
+		log.Println("token:", token)
+		//TODO: claim
+		//TODO: get extra info
 	}
 }
