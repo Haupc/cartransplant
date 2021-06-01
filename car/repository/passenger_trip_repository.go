@@ -9,6 +9,7 @@ import (
 type PassengerTripRepo interface {
 	Create(model *model.PassengerTrip) error
 	FindUserTrip(model model.PassengerTrip) ([]model.PassengerTrip, error)
+	FindHistoryTrip(userID string) ([]model.PassengerTrip, error)
 }
 
 var (
@@ -42,4 +43,13 @@ func (r *passengerTripRepo) FindUserTrip(userTripModel model.PassengerTrip) ([]m
 		return nil, err
 	}
 	return result, nil
+}
+
+func (r *passengerTripRepo) FindHistoryTrip(userID string) ([]model.PassengerTrip, error) {
+	var result []model.PassengerTrip
+	if err := r.db.Where("user_id = ? and state >= 3", userID).Find(&result).Error; err != nil {
+		return nil, err
+	}
+	return result, nil
+
 }

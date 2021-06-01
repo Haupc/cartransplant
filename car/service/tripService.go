@@ -137,13 +137,23 @@ func (s *tripService) TakeTrip(userID string, driverTripID, beginLeaveTime, endL
 }
 
 func (s *tripService) ListUserTrip(userID string, state int32) (*grpcproto.ListUserTripResponse, error) {
-	passengerTripModel := model.PassengerTrip{
-		UserID: userID,
-		State:  state,
-	}
-	userTrips, err := s.PassengerTripRepo.FindUserTrip(passengerTripModel)
-	if err != nil {
-		return nil, err
+	var userTrips []model.PassengerTrip
+	var err error
+	if state == -1 {
+		userTrips, err = s.PassengerTripRepo.FindHistoryTrip(userID)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+
+		passengerTripModel := model.PassengerTrip{
+			UserID: userID,
+			State:  state,
+		}
+		userTrips, err = s.PassengerTripRepo.FindUserTrip(passengerTripModel)
+		if err != nil {
+			return nil, err
+		}
 	}
 	response := &grpcproto.ListUserTripResponse{
 		UserTrip: []*grpcproto.UserTrip{},
