@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/haupc/cartransplant/auth/middleware"
+	"github.com/haupc/cartransplant/base"
 	"github.com/haupc/cartransplant/geometry/client"
 	"github.com/haupc/cartransplant/geometry/dto"
 	"github.com/haupc/cartransplant/grpcproto"
@@ -16,7 +16,7 @@ func (c *carServer) RegisterTrip(ctx context.Context, req *grpcproto.RegisterTri
 		From: req.From,
 		To:   req.To,
 	}
-	md := middleware.GetMetadataFromContext(ctx)
+	md := base.RPCMetadataFromIncoming(ctx)
 	resp, err := client.GetGeomClient().GetRouting(ctx, routeReq)
 	if err != nil {
 		log.Printf("RegisterTrip - Error: %v", err)
@@ -29,7 +29,7 @@ func (c *carServer) RegisterTrip(ctx context.Context, req *grpcproto.RegisterTri
 		return nil, err
 	}
 
-	err = c.TripService.CreateTrip(respObj, md.UserID, req.CarID, int64(req.MaxDistance), req.BeginLeaveTime, req.EndLeaveTime, req.FeeEachKm)
+	err = c.TripService.CreateTrip(respObj, md.UserID, req.CarID, int64(req.MaxDistance), req.BeginLeaveTime, req.EndLeaveTime, req.FeeEachKm, req.Seat)
 	if err != nil {
 		log.Printf("RegisterTrip - Error: %v", err)
 		return nil, err

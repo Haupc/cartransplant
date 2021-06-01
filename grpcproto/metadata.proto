@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package grpcproto;
+message userProfile {
+    string UserID = 1;
+    string Avatar = 2;
+    string Email = 3;
+    string FullName = 4;
+    string Phone = 5;
+}

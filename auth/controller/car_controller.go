@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/haupc/cartransplant/auth/middleware"
 	"github.com/haupc/cartransplant/auth/utils"
 	"github.com/haupc/cartransplant/car/client"
 	"github.com/haupc/cartransplant/car/dto"
@@ -25,6 +26,7 @@ type CarController interface {
 	UpdateCar(ctx *gin.Context)
 	DeleteCar(ctx *gin.Context)
 	ListMyCar(ctx *gin.Context)
+	ListUserTrip(ctx *gin.Context)
 }
 
 type carController struct {
@@ -47,19 +49,20 @@ func (c *carController) ListMyCar(ctx *gin.Context) {
 		log.Printf("Parse limit err")
 		limit = 10
 	}
-	respose, err := c.carClient.ListMyCar(ctx, &grpcproto.Int{Value: int64(limit)})
+	respose, _ := c.carClient.ListMyCar(middleware.RPCNewContextFromContext(ctx), &grpcproto.Int{Value: int64(limit)})
 	ctx.JSON(http.StatusOK, utils.BuildResponse(true, "success", respose.Cars))
 }
 
 func (c *carController) DeleteCar(ctx *gin.Context) {
-	idString := ctx.Query("id")
-	id, err := strconv.Atoi(idString)
+	var deleteCarIDList []int32
+	body, _ := ioutil.ReadAll(ctx.Request.Body)
+	err := json.Unmarshal(body, &deleteCarIDList)
 	if err != nil {
-		respose := utils.BuildErrorResponse("Request wrong format", err.Error(), nil)
+		respose := utils.BuildErrorResponse("Request wrong format", err.Error(), body)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
 		return
 	}
-	respose, err := c.carClient.DeleteCar(ctx, &grpcproto.Int{Value: int64(id)})
+	respose, err := c.carClient.DeleteCar(middleware.RPCNewContextFromContext(ctx), &grpcproto.DeleteCarRequest{Ids: deleteCarIDList})
 	if err != nil {
 		respose := utils.BuildErrorResponse("Something wrong happened", err.Error(), nil)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
@@ -77,7 +80,7 @@ func (c *carController) UpdateCar(ctx *gin.Context) {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
 		return
 	}
-	respose, err := c.carClient.UpdateCar(ctx, &updateCarRequest)
+	respose, err := c.carClient.UpdateCar(middleware.RPCNewContextFromContext(ctx), &updateCarRequest)
 	if err != nil {
 		respose := utils.BuildErrorResponse("Something wrong happened", err.Error(), body)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
@@ -95,7 +98,7 @@ func (c *carController) RegisterCar(ctx *gin.Context) {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
 		return
 	}
-	respose, err := c.carClient.RegisterCar(ctx, &registerCarRequest)
+	respose, err := c.carClient.RegisterCar(middleware.RPCNewContextFromContext(ctx), &registerCarRequest)
 	if err != nil {
 		respose := utils.BuildErrorResponse("Something wrong happened", err.Error(), body)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
@@ -103,10 +106,6 @@ func (c *carController) RegisterCar(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, utils.BuildResponse(respose.Value, "success", nil))
 
-}
-
-func (c *carController) TakeTrip(ctx *gin.Context) {
-	//TODO: take trip
 }
 
 func (c *carController) RegisterTrip(ctx *gin.Context) {
@@ -127,7 +126,7 @@ func (c *carController) RegisterTrip(ctx *gin.Context) {
 		CarID:          registerTripRequest.CarID,
 		FeeEachKm:      registerTripRequest.FeeEachKm,
 	}
-	respose, err := c.carClient.RegisterTrip(ctx, request)
+	respose, err := c.carClient.RegisterTrip(middleware.RPCNewContextFromContext(ctx), request)
 	if err != nil {
 		respose := utils.BuildErrorResponse("Something wrong happened", err.Error(), body)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
@@ -137,7 +136,7 @@ func (c *carController) RegisterTrip(ctx *gin.Context) {
 }
 
 func (c *carController) FindTrip(ctx *gin.Context) {
-	var findTripRequest dto.FindTripRequest
+	var findTripRequest dto.TripRequest
 	body, _ := ioutil.ReadAll(ctx.Request.Body)
 	err := json.Unmarshal(body, &findTripRequest)
 	if err != nil {
@@ -160,7 +159,7 @@ func (c *carController) FindTrip(ctx *gin.Context) {
 		To:             findTripRequest.To.ToGrpcPoint(),
 		Option:         findTripRequest.Opt,
 	}
-	response, err := c.carClient.FindTrip(ctx, request)
+	response, err := c.carClient.FindTrip(middleware.RPCNewContextFromContext(ctx), request)
 	if err != nil {
 		respose := utils.BuildErrorResponse("Something wrong happened", err.Error(), body)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
@@ -169,5 +168,52 @@ func (c *carController) FindTrip(ctx *gin.Context) {
 	var respData []dto.FindTripResponse
 	json.Unmarshal(response.JsonResponse, &respData)
 	ctx.JSON(http.StatusOK, utils.BuildResponse(true, "success", respData))
+
+}
+
+func (c *carController) ListUserTrip(ctx *gin.Context) {
+	stateString := ctx.Query("state")
+	var state int
+	var err error
+	if stateString != "" {
+		state, err = strconv.Atoi(stateString)
+		if err != nil {
+			log.Printf("Parse state err")
+			state = 0
+		}
+	}
+	response, err := c.carClient.ListUserTrip(middleware.RPCNewContextFromContext(ctx), &grpcproto.Int{Value: int64(state)})
+	if err != nil {
+		respose := utils.BuildErrorResponse("Something wrong happened", err.Error(), nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	ctx.JSON(http.StatusOK, utils.BuildResponse(true, "success", response.UserTrip))
+}
+
+func (c *carController) TakeTrip(ctx *gin.Context) {
+	var findTripRequest dto.TripRequest
+	body, _ := ioutil.ReadAll(ctx.Request.Body)
+	err := json.Unmarshal(body, &findTripRequest)
+	if err != nil {
+		respose := utils.BuildErrorResponse("Request wrong format", err.Error(), body)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	request := &grpcproto.TakeTripRequest{
+		DriverTripID:   int32(findTripRequest.DriverTripID),
+		BeginLeaveTime: findTripRequest.BeginLeaveTime,
+		EndLeaveTime:   findTripRequest.EndLeaveTime,
+		From:           findTripRequest.From.ToGrpcPoint(),
+		To:             findTripRequest.From.ToGrpcPoint(),
+		Seat:           int32(findTripRequest.Seat),
+	}
+	_, err = c.carClient.TakeTrip(middleware.RPCNewContextFromContext(ctx), request)
+	if err != nil {
+		respose := utils.BuildErrorResponse("Take trip failed", err.Error(), nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	ctx.JSON(http.StatusOK, utils.BuildResponse(true, "success", nil))
 
 }

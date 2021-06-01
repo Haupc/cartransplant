@@ -28,12 +28,12 @@ func main() {
 	}
 
 	// resourceRoutes := r.Group("/geometry", middleware.Authorize())
-	geometryRoutes := r.Group("/geometry", middleware.AuthorizeJWTFirebase())
+	geometryRoutes := r.Group("/geometry")
 	{
 		// resourceRoutes.GET("/crawl-category", crawlController.CrawlCategory)
-		geometryRoutes.GET("/current-address", geometryController.GetCurrentAddress)
+		geometryRoutes.GET("/current-address", middleware.AuthorizeJWTFirebase(), geometryController.GetCurrentAddress)
 		geometryRoutes.GET("/get-route", geometryController.GetRouting)
-		geometryRoutes.GET("/search-address", geometryController.SearchAddress)
+		geometryRoutes.GET("/search-address", middleware.AuthorizeJWTFirebase(), geometryController.SearchAddress)
 
 	}
 	carRoutes := r.Group("/car", middleware.AuthorizeJWTFirebase())
@@ -42,8 +42,10 @@ func main() {
 		carRoutes.POST("/find-trip", carController.FindTrip)
 		carRoutes.POST("/register-car", carController.RegisterCar)
 		carRoutes.PUT("/update-car", carController.UpdateCar)
-		carRoutes.DELETE("/delete-car", carController.DeleteCar)
+		carRoutes.POST("/delete-car", carController.DeleteCar)
 		carRoutes.GET("/list-my-car", carController.ListMyCar)
+		carRoutes.GET("/user/list-trip", carController.ListUserTrip)
+		carRoutes.POST("/take-trip", carController.TakeTrip)
 	}
 	r.Run(":8080")
 }

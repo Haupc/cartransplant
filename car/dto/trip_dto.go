@@ -13,21 +13,30 @@ type RegisterTripRequest struct {
 	MaxDistance    int32               `json:"max_distance"`
 	CarID          int64               `json:"car_id"`
 	FeeEachKm      int64               `json:"fee_each_km"`
+	Seat           int64               `json:"seat"`
 }
 
-type FindTripRequest struct {
+type TripRequest struct {
 	BeginLeaveTime int64               `json:"begin_leave_time"`
 	EndLeaveTime   int64               `json:"end_leave_time"`
 	From           greometry_dto.Point `json:"from"`
 	To             greometry_dto.Point `json:"to"`
 	Opt            int32               `json:"opt"`
+	Seat           int64               `json:"seat"`
+	DriverTripID   int64               `json:"driver_trip_id"`
 }
 
 type FindTripResponse struct {
+	ID             int64                    `json:"id"`
 	Route          greometry_dto.RoutingDTO `json:"route"`
 	Car            *grpcproto.CarObject     `json:"car"`
 	UserID         int64                    `json:"user_id"`
 	BeginLeaveTime int64                    `json:"begin_leave_time"`
 	EndLeaveTime   int64                    `json:"end_leave_time"`
 	Price          int64                    `json:"price"`
+}
+
+type TripLocationInfo struct {
+	From *grpcproto.Point `json:"from"`
+	To   *grpcproto.Point `json:"to"`
 }

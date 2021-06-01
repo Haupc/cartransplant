@@ -3,7 +3,7 @@ package car
 import (
 	"context"
 
-	"github.com/haupc/cartransplant/auth/middleware"
+	"github.com/haupc/cartransplant/base"
 	"github.com/haupc/cartransplant/car/model"
 	"github.com/haupc/cartransplant/car/repository"
 	"github.com/haupc/cartransplant/car/utils"
@@ -14,10 +14,10 @@ import (
 
 // RegisterCar ...
 func (c *carServer) RegisterCar(ctx context.Context, car *grpcproto.CarObject) (b *grpcproto.Bool, err error) {
+	md := base.RPCMetadataFromIncoming(ctx)
 	var (
-		fixedUserID = 32
-		carDB       = &model.Car{
-			UserID:       fixedUserID,
+		carDB = &model.Car{
+			UserID:       md.UserID,
 			LicensePlate: car.LicensePlate,
 			Color:        car.Color,
 			Model:        car.Model,
@@ -33,7 +33,7 @@ func (c *carServer) RegisterCar(ctx context.Context, car *grpcproto.CarObject) (
 
 // ListMyCar ...
 func (c *carServer) ListMyCar(ctx context.Context, limit *grpcproto.Int) (resp *grpcproto.ListCarResponse, err error) {
-	md := middleware.GetMetadataFromContext(ctx)
+	md := base.RPCMetadataFromIncoming(ctx)
 	carsDB, err := repository.GetCarRepo().GetAllCarByUserID(ctx, md.UserID, int(limit.Value))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -58,8 +58,8 @@ func (c *carServer) UpdateCar(ctx context.Context, car *grpcproto.CarObject) (b 
 }
 
 // DeleteCar ...
-func (c *carServer) DeleteCar(ctx context.Context, carID *grpcproto.Int) (b *grpcproto.Bool, err error) {
-	if err = repository.GetCarRepo().DeleteCarByID(ctx, int(carID.Value)); err != nil {
+func (c *carServer) DeleteCar(ctx context.Context, req *grpcproto.DeleteCarRequest) (b *grpcproto.Bool, err error) {
+	if err = repository.GetCarRepo().DeleteCarByID(ctx, req.Ids); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 

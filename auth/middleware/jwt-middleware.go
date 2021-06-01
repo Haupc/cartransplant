@@ -9,6 +9,7 @@ import (
 	"github.com/haupc/cartransplant/auth/dto"
 	"github.com/haupc/cartransplant/auth/service"
 	"github.com/haupc/cartransplant/auth/utils"
+	"github.com/haupc/cartransplant/base"
 	"github.com/haupc/cartransplant/cache"
 
 	"github.com/dgrijalva/jwt-go"
@@ -62,17 +63,17 @@ func AuthorizeJWTFirebase() gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
 		}
-		var metadata dto.Metadata
+		var myData dto.Metadata
 		dsnap, err := config.GetFireStoreClient().Collection("users").Doc(token.UID).Get(c)
 		if err != nil {
 			response := utils.BuildErrorResponse("Authorization fail", err.Error(), nil)
 			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
 		}
-		dsnap.DataTo(&metadata)
-		metadata.UserID = token.UID
-		c.Set("user_info", metadata)
-		log.Printf("user_info: %#v\n", metadata)
+		dsnap.DataTo(&myData)
+		myData.UserID = token.UID
+		c.Set("user_info", myData)
+		log.Printf("user_info: %#v\n", myData)
 	}
 }
 
@@ -88,4 +89,13 @@ func GetMetadataFromContext(ctx context.Context) *dto.Metadata {
 		return nil
 	}
 	return nil
+}
+
+func RPCNewContextFromContext(ctx context.Context) context.Context {
+	md := GetMetadataFromContext(ctx)
+	var newCtx context.Context
+	if md != nil {
+		newCtx, _ = base.RPCMetadataToOutgoing(context.Background(), md.ToUserProfile())
+	}
+	return newCtx
 }

@@ -17,7 +17,7 @@ var tripRepository *tripRepo
 
 // tripRepo interact with db
 type TripRepo interface {
-	CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime time.Time, priceEachKm int64) error
+	CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime time.Time, priceEachKm int64, seat int32) error
 	FindTrip(from *grpcproto.Point, to *grpcproto.Point) ([]model.Trip, error)
 }
 
@@ -35,13 +35,13 @@ func GettripRepo() TripRepo {
 	return tripRepository
 }
 
-func (r *tripRepo) CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime time.Time, priceEachKm int64) error {
+func (r *tripRepo) CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime time.Time, priceEachKm int64, seat int32) error {
 	lineString := makeLineString(route)
 	way_json, _ := json.Marshal(route)
 
-	query := fmt.Sprintf("insert into public.trip (user_id, car_id, max_distance, way, way_json, begin_leave_time, end_leave_time, fee_each_km)  values (?, ?, ? , %s, ?, ?, ?, ?)", lineString)
+	query := fmt.Sprintf("insert into public.trip (user_id, car_id, max_distance, way, way_json, begin_leave_time, end_leave_time, fee_each_km, seat)  values (?, ?, ? , %s, ?, ?, ?, ?, ?)", lineString)
 	log.Printf("CreateTrip query: %s", query)
-	if err := r.db.Exec(query, userID, carID, maxDistance, way_json, beginLeaveTime, endLeaveTime, priceEachKm).Error; err != nil {
+	if err := r.db.Exec(query, userID, carID, maxDistance, way_json, beginLeaveTime, endLeaveTime, priceEachKm, seat).Error; err != nil {
 		log.Printf("CreateTrip query - Error: %v", err)
 		return err
 	}

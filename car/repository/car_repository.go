@@ -15,7 +15,7 @@ type CarRepo interface {
 	GetAllCarByUserID(ctx context.Context, userID string, limit int) (cars []*model.Car, err error)
 	GetCarByID(ctx context.Context, carID int) (car *model.Car, err error)
 	UpdateCarByID(ctx context.Context, carID int, car *model.Car) (err error)
-	DeleteCarByID(ctx context.Context, carID int) (err error)
+	DeleteCarByID(ctx context.Context, carIDs []int32) (err error)
 }
 
 var (
@@ -103,10 +103,10 @@ func (c *carRepo) UpdateCarByID(ctx context.Context, carID int, car *model.Car) 
 }
 
 // DeleteCarByID ...
-func (c *carRepo) DeleteCarByID(ctx context.Context, carID int) (err error) {
+func (c *carRepo) DeleteCarByID(ctx context.Context, carIDs []int32) (err error) {
 	if err = c.db.WithContext(ctx).
 		Model(&model.Car{}).
-		Where("id = ?", carID).
+		Where("id in (?)", carIDs).
 		Update("deleted", true).
 		Update("deleted_at", time.Now()).Error; err != nil {
 		return err
