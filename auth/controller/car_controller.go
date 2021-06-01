@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/haupc/cartransplant/auth/utils"
@@ -141,6 +142,14 @@ func (c *carController) FindTrip(ctx *gin.Context) {
 	err := json.Unmarshal(body, &findTripRequest)
 	if err != nil {
 		respose := utils.BuildErrorResponse("Request wrong format", err.Error(), body)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	if findTripRequest.BeginLeaveTime < time.Now().Unix() {
+		findTripRequest.BeginLeaveTime = time.Now().Unix()
+	}
+	if findTripRequest.EndLeaveTime < findTripRequest.BeginLeaveTime {
+		respose := utils.BuildErrorResponse("Wrong time to search", err.Error(), body)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
 		return
 	}
