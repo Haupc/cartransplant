@@ -10,7 +10,7 @@ import (
 type Trip struct {
 	gorm.Model
 	WayJson        string
-	UserID         int64
+	UserID         string
 	BeginLeaveTime time.Time
 	EndLeaveTime   time.Time
 	CarID          int64
