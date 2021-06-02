@@ -54,6 +54,7 @@ message UserTrip {
     int32 state = 6;
     userProfile driver = 7;
     carObject car = 8;
+    int64 price = 9;
 }
 
 message listUserTripResponse {

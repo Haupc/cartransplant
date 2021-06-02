@@ -124,6 +124,9 @@ func (s *tripService) TakeTrip(userID string, driverTripID, beginLeaveTime, endL
 		From: from,
 		To:   to,
 	})
+	distance := utils.Distance(from, to)
+	driverTrip, _ := s.TripRepo.GetTripByID(driverTripID)
+
 	passengerTripModel := &model.PassengerTrip{
 		UserID:         userID,
 		TripID:         driverTripID,
@@ -132,6 +135,7 @@ func (s *tripService) TakeTrip(userID string, driverTripID, beginLeaveTime, endL
 		State:          base.TRIP_STATUS_TAKEN,
 		BeginLeaveTime: time.Unix(beginLeaveTime, 0),
 		EndLeaveTime:   time.Unix(endLeaveTime, 0),
+		Price:          distance * driverTrip.FeeEachKm,
 	}
 	err := s.PassengerTripRepo.Create(passengerTripModel)
 	return err
