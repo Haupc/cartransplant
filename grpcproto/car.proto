@@ -4,6 +4,7 @@ package grpcproto;
 
 import "geometry.proto";
 import "common.proto";
+import "metadata.proto";
 
 message registerTripRequest {
     int64 carID = 1;
@@ -48,9 +49,11 @@ message UserTrip {
     int32 id = 1;
     int64 beginLeaveTime = 2;
     int64 endLeaveTime = 3;
-    point from = 4;
-    point to = 5;
+    string from = 4;
+    string to = 5;
     int32 state = 6;
+    userProfile driver = 7;
+    carObject car = 8;
 }
 
 message listUserTripResponse {

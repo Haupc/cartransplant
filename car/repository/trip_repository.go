@@ -19,6 +19,7 @@ var tripRepository *tripRepo
 type TripRepo interface {
 	CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime time.Time, priceEachKm int64, seat int32) error
 	FindTrip(from *grpcproto.Point, to *grpcproto.Point) ([]model.Trip, error)
+	GetTripByID(tripID int64) (*model.Trip, error)
 }
 
 type tripRepo struct {
@@ -33,6 +34,14 @@ func GettripRepo() TripRepo {
 		}
 	}
 	return tripRepository
+}
+func (r *tripRepo) GetTripByID(tripID int64) (*model.Trip, error) {
+	var tripModel model.Trip
+	if err := r.db.First(&tripModel, tripID).Error; err != nil {
+		log.Printf("GetTripByID query - Error: %v", err)
+		return nil, err
+	}
+	return &tripModel, nil
 }
 
 func (r *tripRepo) CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime time.Time, priceEachKm int64, seat int32) error {

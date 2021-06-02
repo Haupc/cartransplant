@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package grpcproto;
+
+import "metadata.proto";
+
+message getUserInfoRequest {
+    string userID = 1;
+}
+
+service auth {
+    rpc GetUserInfo (getUserInfoRequest) returns (userProfile);
+}

@@ -1,9 +1,15 @@
 package main
 
 import (
+	"log"
+	"net"
+
 	"github.com/haupc/cartransplant/auth/controller"
 	"github.com/haupc/cartransplant/auth/middleware"
+	auth "github.com/haupc/cartransplant/auth/rpc"
 	"github.com/haupc/cartransplant/cache"
+	"github.com/haupc/cartransplant/grpcproto"
+	"google.golang.org/grpc"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,6 +23,7 @@ var (
 
 func main() {
 	// config.GetDbConnection().AutoMigrate(&model.User{}, model.Role{}, model.Permission{})
+	go serveRPCServer()
 	r := gin.Default()
 
 	authRoutes := r.Group("/auth")
@@ -48,4 +55,18 @@ func main() {
 		carRoutes.POST("/take-trip", carController.TakeTrip)
 	}
 	r.Run(":8080")
+}
+
+func serveRPCServer() {
+	lis, err := net.Listen("tcp", ":9002")
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+	grpcServer := grpc.NewServer()
+
+	grpcproto.RegisterAuthServer(grpcServer, auth.NewAuthServer())
+
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %s", err)
+	}
 }

@@ -27,7 +27,7 @@ type TripRequest struct {
 }
 
 type FindTripResponse struct {
-	ID             int64                    `json:"id"`
+	ID             int64                    `json:"driver_trip_id"`
 	Route          greometry_dto.RoutingDTO `json:"route"`
 	Car            *grpcproto.CarObject     `json:"car"`
 	UserID         string                   `json:"user_id"`

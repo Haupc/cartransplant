@@ -7,6 +7,7 @@ import (
 	"log"
 	"time"
 
+	auth_client "github.com/haupc/cartransplant/auth/client"
 	"github.com/haupc/cartransplant/base"
 	trip_dto "github.com/haupc/cartransplant/car/dto"
 	"github.com/haupc/cartransplant/car/model"
@@ -159,7 +160,16 @@ func (s *tripService) ListUserTrip(userID string, state int32) (*grpcproto.ListU
 		UserTrip: []*grpcproto.UserTrip{},
 	}
 	for _, u := range userTrips {
-		response.UserTrip = append(response.UserTrip, u.ToGrpcListUserTripResponse())
+		driverTrip, _ := s.TripRepo.GetTripByID(u.TripID)
+		userInfo, err := auth_client.GetAuthClient().GetUserInfo(context.Background(), &grpcproto.GetUserInfoRequest{UserID: u.UserID})
+		if err != nil {
+			log.Printf("Error getting user info: %v", err)
+			return nil, err
+		}
+		carDB, _ := s.CarRepo.GetCarByID(context.Background(), int(driverTrip.CarID))
+		carRpc := utils.CarModelToCarRPC(carDB)
+
+		response.UserTrip = append(response.UserTrip, u.ToGrpcListUserTripResponse(userInfo, carRpc))
 	}
 	return response, nil
 }
