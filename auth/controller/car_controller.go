@@ -125,6 +125,7 @@ func (c *carController) RegisterTrip(ctx *gin.Context) {
 		MaxDistance:    registerTripRequest.MaxDistance,
 		CarID:          registerTripRequest.CarID,
 		FeeEachKm:      registerTripRequest.FeeEachKm,
+		Seat:           int32(registerTripRequest.Seat),
 	}
 	respose, err := c.carClient.RegisterTrip(middleware.RPCNewContextFromContext(ctx), request)
 	if err != nil {
