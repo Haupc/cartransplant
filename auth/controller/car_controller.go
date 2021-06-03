@@ -206,7 +206,7 @@ func (c *carController) TakeTrip(ctx *gin.Context) {
 		BeginLeaveTime: findTripRequest.BeginLeaveTime,
 		EndLeaveTime:   findTripRequest.EndLeaveTime,
 		From:           findTripRequest.From.ToGrpcPoint(),
-		To:             findTripRequest.From.ToGrpcPoint(),
+		To:             findTripRequest.To.ToGrpcPoint(),
 		Seat:           int32(findTripRequest.Seat),
 	}
 	_, err = c.carClient.TakeTrip(middleware.RPCNewContextFromContext(ctx), request)

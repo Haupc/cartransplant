@@ -135,7 +135,7 @@ func (s *tripService) TakeTrip(userID string, driverTripID, beginLeaveTime, endL
 		State:          base.TRIP_STATUS_TAKEN,
 		BeginLeaveTime: time.Unix(beginLeaveTime, 0),
 		EndLeaveTime:   time.Unix(endLeaveTime, 0),
-		Price:          distance * driverTrip.FeeEachKm,
+		Price:          distance * driverTrip.FeeEachKm / 1000,
 	}
 	err := s.PassengerTripRepo.Create(passengerTripModel)
 	return err
