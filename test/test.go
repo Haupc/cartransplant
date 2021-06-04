@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+
+	"github.com/haupc/cartransplant/car/service"
 )
 
 func main() {
-	x := 6.21354
-	fmt.Println(int(x))
+	fmt.Println(service.GetTripService().ListDriverTrip("xLPrxESgCeggCEpQXlDvhfOYGyw2", 1))
 }

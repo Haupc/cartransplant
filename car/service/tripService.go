@@ -7,6 +7,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/golang/glog"
 	auth_client "github.com/haupc/cartransplant/auth/client"
 	"github.com/haupc/cartransplant/base"
 	trip_dto "github.com/haupc/cartransplant/car/dto"
@@ -32,6 +33,7 @@ type TripService interface {
 	FindTrip(from *grpcproto.Point, to *grpcproto.Point, beginLeaveTime int64, endLeaveTime int64, opt int32) ([]trip_dto.FindTripResponse, error)
 	TakeTrip(userID string, driverTripID, beginLeaveTime, endLeaveTime int64, seat int32, from, to *grpcproto.Point) error
 	ListUserTrip(userID string, state int32) (*grpcproto.ListUserTripResponse, error)
+	ListDriverTrip(userID string, limit int32) (*grpcproto.ListDriverTripResponse, error)
 }
 
 func GetTripService() TripService {
@@ -43,6 +45,52 @@ func GetTripService() TripService {
 		}
 	}
 	return _tripService
+}
+
+func (s *tripService) ListDriverTrip(userID string, limit int32) (*grpcproto.ListDriverTripResponse, error) {
+	tripModels, err := s.TripRepo.GetTripByUserID(userID, limit)
+	if err != nil {
+		return nil, err
+	}
+	response := &grpcproto.ListDriverTripResponse{
+		Trips: []*grpcproto.DriverTrip{},
+	}
+	for _, tripModel := range tripModels {
+		var route dto.RoutingDTO
+		json.Unmarshal([]byte(tripModel.WayJson), &route)
+		takenSeat := s.TripRepo.GetTakenSeatByTripID(int64(tripModel.ID))
+		carModel, err := s.CarRepo.GetCarByID(context.Background(), int(tripModel.CarID))
+		if err != nil {
+			glog.V(3).Infof("ListDriverTrip - Error: %v", err)
+			return nil, err
+		}
+
+		driverTrip := &grpcproto.DriverTrip{
+			UserTrips:      []*grpcproto.UserTrip{},
+			BeginLeaveTime: tripModel.BeginLeaveTime.Unix(),
+			EndLeaveTime:   tripModel.EndLeaveTime.Unix(),
+			From:           route.Waypoints[0].Name,
+			To:             route.Waypoints[1].Name,
+			TotalSeat:      tripModel.Seat,
+			ReamaingSeat:   tripModel.Seat - takenSeat,
+			PriceEachKm:    int32(tripModel.FeeEachKm),
+			Car:            utils.CarModelToCarRPC(carModel),
+		}
+		// TODO: usertrip, state
+		userTripModels, err := s.PassengerTripRepo.FindUserTrip(model.PassengerTrip{TripID: int64(tripModel.ID)})
+		if err != nil {
+			glog.V(3).Infof("ListDriverTrip - Error: %v", err)
+			return nil, err
+		}
+		for _, userTripModel := range userTripModels {
+			userTripRPC := userTripModel.ToGrpcListUserTripResponse(nil, nil)
+			if userTripRPC != nil {
+				driverTrip.UserTrips = append(driverTrip.UserTrips, userTripRPC)
+			}
+		}
+		response.Trips = append(response.Trips, driverTrip)
+	}
+	return response, nil
 }
 
 func (s *tripService) CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime, priceEachKm int64, seat int32) error {
@@ -173,7 +221,10 @@ func (s *tripService) ListUserTrip(userID string, state int32) (*grpcproto.ListU
 		carDB, _ := s.CarRepo.GetCarByID(context.Background(), int(driverTrip.CarID))
 		carRpc := utils.CarModelToCarRPC(carDB)
 
-		response.UserTrip = append(response.UserTrip, u.ToGrpcListUserTripResponse(userInfo, carRpc))
+		userTripRPC := u.ToGrpcListUserTripResponse(userInfo, carRpc)
+		if userTripRPC != nil {
+			response.UserTrip = append(response.UserTrip)
+		}
 	}
 	return response, nil
 }

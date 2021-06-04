@@ -36,7 +36,7 @@ func (p *PassengerTrip) ToGrpcListUserTripResponse(userInfo *grpcproto.UserProfi
 	addressFrom, err := client.GetGeomClient().GetCurrentAddress(context.Background(), locationTripInfo.From)
 	if err != nil {
 		log.Printf("ToGrpcListUserTripResponse - GetCurrentAddress error: %v", err)
-		return &grpcproto.UserTrip{}
+		return nil
 	}
 	var addressParsed geomdto.SearchAddressResponse
 	json.Unmarshal(addressFrom.JsonResponse, &addressParsed)
@@ -46,7 +46,7 @@ func (p *PassengerTrip) ToGrpcListUserTripResponse(userInfo *grpcproto.UserProfi
 	addressTo, err := client.GetGeomClient().GetCurrentAddress(context.Background(), locationTripInfo.From)
 	if err != nil {
 		log.Printf("ToGrpcListUserTripResponse - GetCurrentAddress error: %v", err)
-		return &grpcproto.UserTrip{}
+		return nil
 	}
 	json.Unmarshal(addressTo.JsonResponse, &addressParsed)
 	to := addressParsed.DisplayName

@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/golang/glog"
 	"github.com/haupc/cartransplant/auth/config"
 	"github.com/haupc/cartransplant/car/model"
 	"github.com/haupc/cartransplant/geometry/dto"
@@ -20,6 +21,8 @@ type TripRepo interface {
 	CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime time.Time, priceEachKm int64, seat int32) error
 	FindTrip(from *grpcproto.Point, to *grpcproto.Point) ([]model.Trip, error)
 	GetTripByID(tripID int64) (*model.Trip, error)
+	GetTripByUserID(userID string, limit int32) ([]model.Trip, error)
+	GetTakenSeatByTripID(tripID int64) int32
 }
 
 type tripRepo struct {
@@ -35,6 +38,23 @@ func GettripRepo() TripRepo {
 	}
 	return tripRepository
 }
+func (r *tripRepo) GetTakenSeatByTripID(tripID int64) int32 {
+	var result int32
+	if err := r.db.Raw("select sum(seat) from passenger_trip where trip_id = ? and state = 2", 26).Scan(&result).Error; err != nil {
+		glog.V(3).Infof("GetTripByUserID - error: %v", err)
+		return 0
+	}
+	return result
+}
+func (r *tripRepo) GetTripByUserID(userID string, limit int32) ([]model.Trip, error) {
+	var tripModels []model.Trip
+	if err := r.db.Where("user_id = ?", userID).Limit(int(limit)).Find(&tripModels).Error; err != nil {
+		glog.V(3).Infof("GetTripByUserID - error: %v", err)
+		return nil, err
+	}
+	return tripModels, nil
+}
+
 func (r *tripRepo) GetTripByID(tripID int64) (*model.Trip, error) {
 	var tripModel model.Trip
 	if err := r.db.First(&tripModel, tripID).Error; err != nil {
