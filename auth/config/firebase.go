@@ -7,6 +7,7 @@ import (
 	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
 	"firebase.google.com/go/auth"
+	"firebase.google.com/go/messaging"
 	"google.golang.org/api/option"
 )
 
@@ -14,6 +15,7 @@ var (
 	app             *firebase.App
 	firestoreClient *firestore.Client
 	authClient      *auth.Client
+	fcmClient       *messaging.Client
 )
 
 func GetFirebaseApp() *firebase.App {
@@ -49,4 +51,15 @@ func GetFireStoreClient() *firestore.Client {
 		}
 	}
 	return firestoreClient
+}
+
+func GetFcmClient() *messaging.Client {
+	var err error
+	if fcmClient == nil {
+		fcmClient, err = GetFirebaseApp().Messaging(context.Background())
+		if err != nil {
+			log.Fatalf("error initializing fcm client: %v\n", err)
+		}
+	}
+	return fcmClient
 }

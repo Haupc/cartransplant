@@ -18,6 +18,7 @@ var (
 	authController     = controller.GetAuthController()
 	geometryController = controller.GetGeometryController()
 	carController      = controller.GetCarController()
+	notifyController   = controller.GetNotifyController()
 	userCache          = cache.GetUserCache()
 )
 
@@ -53,6 +54,10 @@ func main() {
 		carRoutes.GET("/list-my-car", carController.ListMyCar)
 		carRoutes.GET("/user/list-trip", carController.ListUserTrip)
 		carRoutes.POST("/take-trip", carController.TakeTrip)
+	}
+	notifyRoute := r.Group("/noti")
+	{
+		notifyRoute.POST("/test-push-noti", notifyController.PushNotify)
 	}
 	r.Run(":8080")
 }
