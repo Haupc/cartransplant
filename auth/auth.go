@@ -54,6 +54,7 @@ func main() {
 		carRoutes.GET("/list-my-car", carController.ListMyCar)
 		carRoutes.GET("/user/list-trip", carController.ListUserTrip)
 		carRoutes.POST("/take-trip", carController.TakeTrip)
+		carRoutes.GET("/driver/list-trip", carController.ListDriverTrip)
 	}
 	notifyRoute := r.Group("/noti")
 	{

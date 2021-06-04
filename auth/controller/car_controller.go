@@ -27,6 +27,7 @@ type CarController interface {
 	DeleteCar(ctx *gin.Context)
 	ListMyCar(ctx *gin.Context)
 	ListUserTrip(ctx *gin.Context)
+	ListDriverTrip(ctx *gin.Context)
 }
 
 type carController struct {
@@ -40,6 +41,23 @@ func GetCarController() CarController {
 		}
 	}
 	return _carController
+}
+
+func (c *carController) ListDriverTrip(ctx *gin.Context) {
+	limitString := ctx.Query("limit")
+	limit, err := strconv.Atoi(limitString)
+	if err != nil || limit <= 0 {
+		log.Printf("Parse limit err")
+		limit = 10
+	}
+	respose, err := c.carClient.ListDriverTrip(middleware.RPCNewContextFromContext(ctx), &grpcproto.Int{Value: int64(limit)})
+	if err != nil {
+		respose := utils.BuildErrorResponse("Something wrong happened", err.Error(), nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	ctx.JSON(http.StatusOK, utils.BuildResponse(true, "success", respose.Trips))
+
 }
 
 func (c *carController) ListMyCar(ctx *gin.Context) {
