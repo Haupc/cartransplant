@@ -8,6 +8,9 @@ message notifyMessage {
     string title = 3;
     string message = 4;
 }
+message getNotifyResponse {
+    repeated notifyMessage notifications = 1;
+}
 
 message getNotifyRequest{
     int32 limit = 1;
@@ -16,5 +19,5 @@ message getNotifyRequest{
 
 
 service notify {
-    rpc getNotify (getNotifyRequest) returns (notifyMessage);
+    rpc getNotify (getNotifyRequest) returns (getNotifyResponse);
 }

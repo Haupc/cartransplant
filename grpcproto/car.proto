@@ -55,6 +55,7 @@ message userTrip {
     userProfile driver = 7;
     carObject car = 8;
     int64 price = 9;
+    float distance = 10;
 }
 
 message listUserTripResponse {
