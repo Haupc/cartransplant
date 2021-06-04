@@ -83,7 +83,12 @@ func (s *tripService) ListDriverTrip(userID string, limit int32) (*grpcproto.Lis
 			return nil, err
 		}
 		for _, userTripModel := range userTripModels {
-			userTripRPC := userTripModel.ToGrpcListUserTripResponse(nil, nil)
+			userInfo, err := auth_client.GetAuthClient().GetUserInfo(context.Background(), &grpcproto.GetUserInfoRequest{UserID: u.UserID})
+			if err != nil {
+				glog.V(3).Infof("Error getting user info: %v", err)
+				return nil, err
+			}
+			userTripRPC := userTripModel.ToGrpcListUserTripResponse(userInfo, nil)
 			if userTripRPC != nil {
 				driverTrip.UserTrips = append(driverTrip.UserTrips, userTripRPC)
 			}

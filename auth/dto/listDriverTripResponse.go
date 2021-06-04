@@ -15,6 +15,17 @@ type DriverTripResponse struct {
 	PriceEachKm    int32                 `json:"priceEachKm"`
 }
 
-func DriverTripRPCToDriverTripResponse(*grpcproto.DriverTrip) DriverTripResponse {
-
+func DriverTripRPCToDriverTripResponse(driverTripRPC *grpcproto.DriverTrip) DriverTripResponse {
+	return DriverTripResponse{
+		UserTrips:      driverTripRPC.UserTrips,
+		BeginLeaveTime: driverTripRPC.BeginLeaveTime,
+		EndLeaveTime:   driverTripRPC.EndLeaveTime,
+		From:           driverTripRPC.From,
+		To:             driverTripRPC.To,
+		State:          driverTripRPC.State,
+		TotalSeat:      driverTripRPC.TotalSeat,
+		ReamaingSeat:   driverTripRPC.ReamaingSeat,
+		Car:            driverTripRPC.Car,
+		PriceEachKm:    driverTripRPC.PriceEachKm,
+	}
 }

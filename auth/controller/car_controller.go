@@ -9,10 +9,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	auth_dto "github.com/haupc/cartransplant/auth/dto"
 	"github.com/haupc/cartransplant/auth/middleware"
 	"github.com/haupc/cartransplant/auth/utils"
 	"github.com/haupc/cartransplant/car/client"
 	"github.com/haupc/cartransplant/car/dto"
+
 	"github.com/haupc/cartransplant/grpcproto"
 )
 
@@ -56,7 +58,11 @@ func (c *carController) ListDriverTrip(ctx *gin.Context) {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
 		return
 	}
-	ctx.JSON(http.StatusOK, utils.BuildResponse(true, "success", respose.Trips))
+	var driverTripResponse []auth_dto.DriverTripResponse
+	for _, trip := range respose.Trips {
+		driverTripResponse = append(driverTripResponse, auth_dto.DriverTripRPCToDriverTripResponse(trip))
+	}
+	ctx.JSON(http.StatusOK, utils.BuildResponse(true, "success", driverTripResponse))
 
 }
 
