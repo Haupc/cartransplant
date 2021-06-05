@@ -4,6 +4,7 @@ import (
 	"log"
 	"net"
 
+	"github.com/haupc/cartransplant/grpcproto"
 	notify "github.com/haupc/cartransplant/notify/rpc"
 	"google.golang.org/grpc"
 )
