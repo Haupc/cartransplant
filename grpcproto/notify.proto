@@ -17,7 +17,30 @@ message getNotifyRequest{
     int32 offset = 2;
 }
 
+message UserToken {
+    string UserID = 1;
+    string Token = 2;
+}
 
 service notify {
     rpc getNotify (getNotifyRequest) returns (getNotifyResponse);
+    rpc AddUserToken(AddUserTokenReq) returns (AddUserTokenResp);
+    rpc PushNotif(PushNotifyReq) returns(PushNotifyResp);
 }
+
+message AddUserTokenReq {
+    UserToken UserToken = 1;
+}
+
+message AddUserTokenResp {
+    uint32 Code = 1;
+}
+
+message PushNotifReq {
+    notifyMessage Notification = 1;
+}
+
+message PushNotifyResp {
+    uint32 Code = 1;
+}
+
