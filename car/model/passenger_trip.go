@@ -50,6 +50,7 @@ func (p *PassengerTrip) ToGrpcListUserTripResponse(userInfo *grpcproto.UserProfi
 	}
 	json.Unmarshal(addressTo.JsonResponse, &addressParsed)
 	to := addressParsed.DisplayName
+	// distance := utils.Distance(locationTripInfo.From, locationTripInfo.To)
 	return &grpcproto.UserTrip{
 		Id:             int32(p.ID),
 		BeginLeaveTime: p.BeginLeaveTime.Unix(),
@@ -60,5 +61,6 @@ func (p *PassengerTrip) ToGrpcListUserTripResponse(userInfo *grpcproto.UserProfi
 		Driver:         userInfo,
 		Car:            car,
 		Price:          p.Price,
+		// Distance:       float32(distance),
 	}
 }
