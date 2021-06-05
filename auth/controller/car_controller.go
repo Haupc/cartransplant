@@ -56,7 +56,7 @@ func (c *carController) ListDriverTrip(ctx *gin.Context) {
 	state, err := strconv.Atoi(stateString)
 	if err != nil {
 		log.Printf("Parse limit err")
-		state = 10
+		state = 1
 	}
 	request := &grpcproto.ListDriverTripRequest{
 		State: int32(state),
