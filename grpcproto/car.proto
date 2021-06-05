@@ -83,6 +83,10 @@ message listDriverTripResponse {
     repeated driverTrip trips = 1;
 }
 
+message listDriverTripRequest {
+    int32 state = 1;
+    int32 limit = 2;
+}
 service car {
     // driver
     rpc registerTrip(registerTripRequest) returns (grpcproto.bool);
@@ -90,7 +94,7 @@ service car {
     rpc listMyCar(int) returns (listCarResponse);
     rpc updateCar (carObject) returns (grpcproto.bool);
     rpc deleteCar (deleteCarRequest) returns (grpcproto.bool);
-    rpc listDriverTrip(int) returns (listDriverTripResponse);
+    rpc listDriverTrip(listDriverTripRequest) returns (listDriverTripResponse);
     // user
     rpc findTrip(findTripRequest) returns (jsonResponse);
     rpc takeTrip(takeTripRequest) returns (grpcproto.bool);
