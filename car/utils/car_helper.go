@@ -29,7 +29,7 @@ func CarRPCToCarModel(car *grpcproto.CarObject) (carModel *model.Car) {
 	}
 }
 
-func Distance(from, to *grpcproto.Point) int64 {
+func Distance(from, to *grpcproto.Point) float64 {
 	request := &grpcproto.RouteRequest{
 		From: from,
 		To:   to,
@@ -45,5 +45,5 @@ func Distance(from, to *grpcproto.Point) int64 {
 		log.Println("Distance - Error:", err)
 		return 0
 	}
-	return int64(route.Routes[0].Distance)
+	return route.Routes[0].Distance
 }

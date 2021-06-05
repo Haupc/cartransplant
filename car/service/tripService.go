@@ -151,7 +151,7 @@ func (s *tripService) FindTrip(from *grpcproto.Point, to *grpcproto.Point, begin
 		}
 		realBeginLeaveTime := float64(m.BeginLeaveTime.Unix()) + subRoute.Routes[0].Duration
 		realEndeaveTime := float64(m.EndLeaveTime.Unix()) + subRoute.Routes[0].Duration
-
+		remainingSeat := m.Seat - s.TripRepo.GetTakenSeatByTripID(int64(m.ID))
 		if !(int64(realEndeaveTime) < beginLeaveTime || int64(realBeginLeaveTime) > endLeaveTime) {
 			carModel, err := s.CarRepo.GetCarByID(context.Background(), int(m.CarID))
 			if err != nil {
@@ -165,7 +165,9 @@ func (s *tripService) FindTrip(from *grpcproto.Point, to *grpcproto.Point, begin
 				Car:            utils.CarModelToCarRPC(carModel),
 				BeginLeaveTime: m.BeginLeaveTime.Unix(),
 				EndLeaveTime:   m.EndLeaveTime.Unix(),
-				Price:          m.FeeEachKm * distance / 1000,
+				Price:          int64(float64(m.FeeEachKm)*distance) / 1000,
+				Distance:       distance,
+				RemainingSeat:  remainingSeat,
 			})
 		}
 	}
@@ -188,7 +190,7 @@ func (s *tripService) TakeTrip(userID string, driverTripID, beginLeaveTime, endL
 		State:          base.TRIP_STATUS_TAKEN,
 		BeginLeaveTime: time.Unix(beginLeaveTime, 0),
 		EndLeaveTime:   time.Unix(endLeaveTime, 0),
-		Price:          distance * driverTrip.FeeEachKm / 1000,
+		Price:          int64(float64(driverTrip.FeeEachKm)*distance) / 1000,
 	}
 	err := s.PassengerTripRepo.Create(passengerTripModel)
 	return err
