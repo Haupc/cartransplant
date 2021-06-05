@@ -3,6 +3,8 @@ package notify
 import (
 	"context"
 
+	"firebase.google.com/go/messaging"
+	"github.com/haupc/cartransplant/auth/config"
 	"github.com/haupc/cartransplant/base"
 	"github.com/haupc/cartransplant/grpcproto"
 	"github.com/haupc/cartransplant/notify/repository"
@@ -11,10 +13,18 @@ import (
 )
 
 type notifyServer struct {
+	fcmClient *messaging.Client
 }
 
+var _notifyServer *notifyServer
+
 func NewNotifyServer() *notifyServer {
-	return &notifyServer{}
+	if _notifyServer == nil {
+		_notifyServer = &notifyServer{
+			fcmClient: config.GetFcmClient(),
+		}
+	}
+	return _notifyServer
 }
 
 // ------------------------------
@@ -33,4 +43,65 @@ func (n *notifyServer) GetNotify(ctx context.Context, req *grpcproto.GetNotifyRe
 	}
 
 	return &grpcproto.GetNotifyResponse{Notifications: notifications}, nil
+}
+
+// ------------------------------
+// AddUserToken as the func name
+func (n *notifyServer) AddUserToken(ctx context.Context, req *grpcproto.AddUserTokenReq) (resp *grpcproto.AddUserTokenResp, err error) {
+	// pre-exec check
+	if req == nil || req.UserToken == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	token := &grpcproto.UserToken{
+		UserID: req.UserToken.UserID,
+		Token:  req.UserToken.Token,
+	}
+
+	if err = repository.GetNotifyRepo().SaveUserToken(ctx, token); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &grpcproto.AddUserTokenResp{Code: 1}, nil
+}
+
+// ------------------------------
+// PushNotify save notify to db, query user tokens & push to firebase
+func (n *notifyServer) PushNotify(ctx context.Context, req *grpcproto.PushNotifyReq) (resp *grpcproto.PushNotifyResp, err error) {
+	// pre-exec check
+	if req == nil || req.Notification == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	// save noti to db
+	if err = repository.GetNotifyRepo().SaveNotification(ctx, req.Notification); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	// get all token
+	tokens, err := repository.GetNotifyRepo().GetAllTokenByUserID(ctx, req.Notification.UserID)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	// make firebase message
+	// create token list
+	deviceTokens := make([]string, 0, len(tokens))
+	for i := range tokens {
+		deviceTokens = append(deviceTokens, tokens[i].Token)
+	}
+	msg := &messaging.MulticastMessage{
+		Data: map[string]string{
+			"Title":   req.Notification.Title,
+			"Message": req.Notification.Message,
+		},
+		Tokens: deviceTokens,
+	}
+	// send message
+	_, err = n.fcmClient.SendMulticast(ctx, msg)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &grpcproto.PushNotifyResp{Code: 1}, nil
 }

@@ -13,7 +13,10 @@ import (
 // -------------------------------------------------------- NOTIFICATION REPO ----------------------------------------------------------
 
 type NotifyRepo interface {
+	GetAllTokenByUserID(ctx context.Context, userID string) (token []*grpcproto.UserToken, err error)
+	SaveUserToken(ctx context.Context, token *grpcproto.UserToken) (err error)
 	GetAllNotifyRepoByUserID(ctx context.Context, userID string, limit int, offset int) (notis []*grpcproto.NotifyMessage, err error)
+	SaveNotification(ctx context.Context, notification *grpcproto.NotifyMessage) (err error)
 }
 
 var (
@@ -37,6 +40,33 @@ func GetNotifyRepo() NotifyRepo {
 // -----------------------------------------------------------------------------------------------------------------------------
 // -------------------------------------------------------- IMPLEMENT ----------------------------------------------------------
 
+func (n *notifyRepo) GetAllTokenByUserID(ctx context.Context, userID string) (token []*grpcproto.UserToken, err error) {
+	err = n.db.WithContext(ctx).Model(&grpcproto.UserToken{}).
+		Where("user_id = ?", userID).
+		Find(&token).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return token, nil
+}
+func (n *notifyRepo) SaveUserToken(ctx context.Context, token *grpcproto.UserToken) (err error) {
+	// pre-exec check
+	if token == nil {
+		return errors.New("Nil token")
+	}
+
+	err = n.db.WithContext(ctx).Model(&grpcproto.UserToken{}).
+		Save(token).Error
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (n *notifyRepo) GetAllNotifyRepoByUserID(ctx context.Context, userID string, limit int, offset int) (notis []*grpcproto.NotifyMessage, err error) {
 	err = n.db.WithContext(ctx).Model(&grpcproto.NotifyMessage{}).
 		Where("user_id = ?", userID).
@@ -51,7 +81,7 @@ func (n *notifyRepo) GetAllNotifyRepoByUserID(ctx context.Context, userID string
 	return notis, nil
 }
 
-func (n *notifyRepo) InsertNewNoti(ctx context.Context, notification *grpcproto.NotifyMessage) (err error) {
+func (n *notifyRepo) SaveNotification(ctx context.Context, notification *grpcproto.NotifyMessage) (err error) {
 	// pre-exec check
 	if notification == nil {
 		return errors.New("Nil noti")
