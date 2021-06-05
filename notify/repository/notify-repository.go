@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/haupc/cartransplant/auth/config"
 	"github.com/haupc/cartransplant/grpcproto"
@@ -14,7 +13,7 @@ import (
 // -------------------------------------------------------- NOTIFICATION REPO ----------------------------------------------------------
 
 type NotifyRepo interface {
-	GetAllNotifyRepoByUserID(ctx context.Context, limit int, offset int) (notis []*grpcproto.NotifyMessage, err error)
+	GetAllNotifyRepoByUserID(ctx context.Context, userID string, limit int, offset int) (notis []*grpcproto.NotifyMessage, err error)
 }
 
 var (
@@ -27,7 +26,7 @@ type notifyRepo struct {
 }
 
 func GetNotifyRepo() NotifyRepo {
-	if _notifyRepo == nil || _notifyRepo.db == nil {
+	if _notifyRepo == nil {
 		_notifyRepo = &notifyRepo{
 			config.GetDbConnection(),
 		}
@@ -38,14 +37,9 @@ func GetNotifyRepo() NotifyRepo {
 // -----------------------------------------------------------------------------------------------------------------------------
 // -------------------------------------------------------- IMPLEMENT ----------------------------------------------------------
 
-func (n *notifyRepo) GetAllNotifyRepoByUserID(ctx context.Context, limit int, offset int) (notis []*grpcproto.NotifyMessage, err error) {
-	userID, err := n.getUserIDFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
+func (n *notifyRepo) GetAllNotifyRepoByUserID(ctx context.Context, userID string, limit int, offset int) (notis []*grpcproto.NotifyMessage, err error) {
 	err = n.db.WithContext(ctx).Model(&grpcproto.NotifyMessage{}).
-		Where("user_id LIKE ?", userID).
+		Where("user_id = ?", userID).
 		Order("created_time DESC").
 		Offset(offset).Limit(limit).
 		Find(&notis).Error
@@ -57,24 +51,17 @@ func (n *notifyRepo) GetAllNotifyRepoByUserID(ctx context.Context, limit int, of
 	return notis, nil
 }
 
-// ------------------------------
-// getUserIDFromContext get userID from context by key and check
-func (n *notifyRepo) getUserIDFromContext(ctx context.Context) (userID string, err error) {
-	const userIDKey = "userID"
-
-	if ctx.Err() != nil {
-		return "", ctx.Err()
+func (n *notifyRepo) InsertNewNoti(ctx context.Context, notification *grpcproto.NotifyMessage) (err error) {
+	// pre-exec check
+	if notification == nil {
+		return errors.New("Nil noti")
 	}
 
-	userIDItf := ctx.Value(userIDKey)
-	switch u := userIDItf.(type) {
-	case string:
-		if len(u) == 0 {
-			return "", errors.New("Empty userID")
-		}
-		return u, nil
+	err = n.db.WithContext(ctx).Model(&grpcproto.NotifyMessage{}).Save(notification).Error
 
-	default:
-		return "", fmt.Errorf("userID type: %T. Value %v", userIDItf, userIDItf)
+	if err != nil {
+		return err
 	}
+
+	return nil
 }
