@@ -88,8 +88,10 @@ func (s *tripService) ListDriverTrip(userID string, state, limit int32) (*grpcpr
 				glog.V(3).Infof("Error getting user info: %v", err)
 				return nil, err
 			}
-			userTripRPC := userTripModel.ToGrpcListUserTripResponse(userInfo, nil)
-			if userTripRPC != nil {
+			userTripRPC, locationInfo := userTripModel.ToGrpcListUserTripResponse(nil, userInfo, nil)
+			if userTripRPC != nil || locationInfo != nil {
+				distance := utils.Distance(locationInfo.From, locationInfo.To)
+				userTripRPC.Distance = float32(distance / 1000)
 				driverTrip.UserTrips = append(driverTrip.UserTrips, userTripRPC)
 			}
 		}
@@ -228,9 +230,11 @@ func (s *tripService) ListUserTrip(userID string, state int32) (*grpcproto.ListU
 		carDB, _ := s.CarRepo.GetCarByID(context.Background(), int(driverTrip.CarID))
 		carRpc := utils.CarModelToCarRPC(carDB)
 
-		userTripRPC := u.ToGrpcListUserTripResponse(userInfo, carRpc)
-		if userTripRPC != nil {
-			response.UserTrip = append(response.UserTrip)
+		userTripRPC, locationInfo := u.ToGrpcListUserTripResponse(nil, userInfo, carRpc)
+		if userTripRPC != nil || locationInfo != nil {
+			distance := utils.Distance(locationInfo.From, locationInfo.To)
+			userTripRPC.Distance = float32(distance / 1000)
+			response.UserTrip = append(response.UserTrip, userTripRPC)
 		}
 	}
 	return response, nil

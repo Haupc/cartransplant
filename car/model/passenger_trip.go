@@ -30,27 +30,26 @@ func (p *PassengerTrip) TableName() string {
 	return "passenger_trip"
 }
 
-func (p *PassengerTrip) ToGrpcListUserTripResponse(userInfo *grpcproto.UserProfile, car *grpcproto.CarObject) *grpcproto.UserTrip {
+func (p *PassengerTrip) ToGrpcListUserTripResponse(driverInfro, userInfo *grpcproto.UserProfile, car *grpcproto.CarObject) (*grpcproto.UserTrip, *dto.TripLocationInfo) {
 	var locationTripInfo dto.TripLocationInfo
 	json.Unmarshal([]byte(p.Location), &locationTripInfo)
 	addressFrom, err := client.GetGeomClient().GetCurrentAddress(context.Background(), locationTripInfo.From)
 	if err != nil {
 		log.Printf("ToGrpcListUserTripResponse - GetCurrentAddress error: %v", err)
-		return nil
+		return nil, nil
 	}
 	var addressParsed geomdto.SearchAddressResponse
 	json.Unmarshal(addressFrom.JsonResponse, &addressParsed)
 
 	from := addressParsed.DisplayName
 
-	addressTo, err := client.GetGeomClient().GetCurrentAddress(context.Background(), locationTripInfo.From)
+	addressTo, err := client.GetGeomClient().GetCurrentAddress(context.Background(), locationTripInfo.To)
 	if err != nil {
 		log.Printf("ToGrpcListUserTripResponse - GetCurrentAddress error: %v", err)
-		return nil
+		return nil, nil
 	}
 	json.Unmarshal(addressTo.JsonResponse, &addressParsed)
 	to := addressParsed.DisplayName
-	// distance := utils.Distance(locationTripInfo.From, locationTripInfo.To)
 	return &grpcproto.UserTrip{
 		Id:             int32(p.ID),
 		BeginLeaveTime: p.BeginLeaveTime.Unix(),
@@ -58,9 +57,10 @@ func (p *PassengerTrip) ToGrpcListUserTripResponse(userInfo *grpcproto.UserProfi
 		From:           from,
 		To:             to,
 		State:          p.State,
-		Driver:         userInfo,
+		Driver:         driverInfro,
+		User:           userInfo,
 		Car:            car,
 		Price:          p.Price,
 		// Distance:       float32(distance),
-	}
+	}, &locationTripInfo
 }
