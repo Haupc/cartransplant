@@ -25,7 +25,7 @@ message UserToken {
 service notify {
     rpc getNotify (getNotifyRequest) returns (getNotifyResponse);
     rpc AddUserToken(AddUserTokenReq) returns (AddUserTokenResp);
-    rpc PushNotif(PushNotifyReq) returns(PushNotifyResp);
+    rpc PushNotify(PushNotifyReq) returns(PushNotifyResp);
 }
 
 message AddUserTokenReq {
@@ -36,7 +36,7 @@ message AddUserTokenResp {
     uint32 Code = 1;
 }
 
-message PushNotifReq {
+message PushNotifyReq {
     notifyMessage Notification = 1;
 }
 
