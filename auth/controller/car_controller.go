@@ -46,12 +46,10 @@ func GetCarController() CarController {
 }
 
 func (c *carController) ListDriverTrip(ctx *gin.Context) {
-	limitString := ctx.Query("limit")
-	limit, err := strconv.Atoi(limitString)
-	if err != nil || limit <= 0 {
-		log.Printf("Parse limit err")
-		limit = 10
-	}
+	startdateString := ctx.Query("startdate")
+	startdate, _ := strconv.Atoi(startdateString)
+	enddateString := ctx.Query("enddate")
+	enddate, _ := strconv.Atoi(enddateString)
 	stateString := ctx.Query("state")
 	state, err := strconv.Atoi(stateString)
 	if err != nil {
@@ -59,8 +57,9 @@ func (c *carController) ListDriverTrip(ctx *gin.Context) {
 		state = 1
 	}
 	request := &grpcproto.ListDriverTripRequest{
-		State: int32(state),
-		Limit: int32(limit),
+		State:     int32(state),
+		StartDate: int32(startdate),
+		EndDate:   int32(enddate),
 	}
 	respose, err := c.carClient.ListDriverTrip(middleware.RPCNewContextFromContext(ctx), request)
 	if err != nil {

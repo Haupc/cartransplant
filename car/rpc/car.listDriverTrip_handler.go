@@ -11,5 +11,5 @@ import (
 func (c *carServer) ListDriverTrip(ctx context.Context, req *grpcproto.ListDriverTripRequest) (*grpcproto.ListDriverTripResponse, error) {
 	md := base.RPCMetadataFromIncoming(ctx)
 	glog.V(3).Infof("metadata: %v", md)
-	return c.TripService.ListDriverTrip(md.UserID, req.State, req.Limit)
+	return c.TripService.ListDriverTrip(md.UserID, req.State, req.StartDate, req.EndDate)
 }
