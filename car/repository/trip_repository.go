@@ -21,7 +21,7 @@ type TripRepo interface {
 	CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime time.Time, priceEachKm int64, seat int32) error
 	FindTrip(from *grpcproto.Point, to *grpcproto.Point) ([]model.Trip, error)
 	GetTripByID(tripID int64) (*model.Trip, error)
-	GetTripByUserID(userID string, state, limit int32) ([]model.Trip, error)
+	GetTripByUserID(userID string, state, startDate, endDate int32) ([]model.Trip, error)
 	GetTakenSeatByTripID(tripID int64) int32
 }
 
@@ -46,11 +46,20 @@ func (r *tripRepo) GetTakenSeatByTripID(tripID int64) int32 {
 	}
 	return result
 }
-func (r *tripRepo) GetTripByUserID(userID string, state, limit int32) ([]model.Trip, error) {
+func (r *tripRepo) GetTripByUserID(userID string, state, startDate, endDate int32) ([]model.Trip, error) {
 	var tripModels []model.Trip
-	if err := r.db.Where("user_id = ? and state = ?", userID, state).Limit(int(limit)).Find(&tripModels).Error; err != nil {
-		glog.V(3).Infof("GetTripByUserID - error: %v", err)
-		return nil, err
+	if startDate > 0 && startDate < endDate {
+		startDateTime := time.Unix(int64(startDate), 0)
+		endDateTime := time.Unix(int64(endDate), 0).AddDate(0, 0, 1)
+		if err := r.db.Where("user_id = ? and state = ? and (begin_leave_time between ? and ? or end_leave_time between ? and ?)", userID, state, startDateTime, endDateTime, startDateTime, endDateTime).Find(&tripModels).Error; err != nil {
+			glog.V(3).Infof("GetTripByUserID - error: %v", err)
+			return nil, err
+		}
+	} else {
+		if err := r.db.Where("user_id = ? and state = ?", userID, state).Find(&tripModels).Error; err != nil {
+			glog.V(3).Infof("GetTripByUserID - error: %v", err)
+			return nil, err
+		}
 	}
 	return tripModels, nil
 }

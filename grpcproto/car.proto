@@ -88,7 +88,8 @@ message listDriverTripResponse {
 
 message listDriverTripRequest {
     int32 state = 1;
-    int32 limit = 2;
+    int32 startDate = 2;
+    int32 endDate = 3;
 }
 service car {
     // driver
