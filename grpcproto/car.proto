@@ -78,6 +78,8 @@ message driverTrip {
     int32 reamaingSeat = 8;
     carObject car = 9;
     int32 priceEachKm = 10;
+    int32 totalUserTrip = 12;
+    int64 totalIncome = 13;
 }
 
 message listDriverTripResponse {

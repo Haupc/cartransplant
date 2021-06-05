@@ -13,6 +13,8 @@ type DriverTripResponse struct {
 	ReamaingSeat   int32                 `json:"reamaingSeat"`
 	Car            *grpcproto.CarObject  `json:"car"`
 	PriceEachKm    int32                 `json:"priceEachKm"`
+	TotalIncome    int64                 `json:"totalIncome"`
+	TotalUserTrip  int32                 `json:"totalUserTrip"`
 }
 
 func DriverTripRPCToDriverTripResponse(driverTripRPC *grpcproto.DriverTrip) DriverTripResponse {
@@ -27,5 +29,7 @@ func DriverTripRPCToDriverTripResponse(driverTripRPC *grpcproto.DriverTrip) Driv
 		ReamaingSeat:   driverTripRPC.ReamaingSeat,
 		Car:            driverTripRPC.Car,
 		PriceEachKm:    driverTripRPC.PriceEachKm,
+		TotalIncome:    driverTripRPC.TotalIncome,
+		TotalUserTrip:  driverTripRPC.TotalUserTrip,
 	}
 }

@@ -17,6 +17,7 @@ type Trip struct {
 	MaxDistance    int32
 	FeeEachKm      int64
 	Seat           int32
+	State          int32
 }
 
 // TableName name of table

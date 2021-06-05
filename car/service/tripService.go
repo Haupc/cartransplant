@@ -75,6 +75,7 @@ func (s *tripService) ListDriverTrip(userID string, state, limit int32) (*grpcpr
 			ReamaingSeat:   tripModel.Seat - takenSeat,
 			PriceEachKm:    int32(tripModel.FeeEachKm),
 			Car:            utils.CarModelToCarRPC(carModel),
+			State:          tripModel.State,
 		}
 		// TODO: usertrip, state
 		userTripModels, err := s.PassengerTripRepo.FindUserTrip(model.PassengerTrip{TripID: int64(tripModel.ID)})
@@ -82,6 +83,8 @@ func (s *tripService) ListDriverTrip(userID string, state, limit int32) (*grpcpr
 			glog.V(3).Infof("ListDriverTrip - Error: %v", err)
 			return nil, err
 		}
+		driverTrip.TotalUserTrip = int32(len(userTripModels))
+		totalIncome := 0
 		for _, userTripModel := range userTripModels {
 			userInfo, err := auth_client.GetAuthClient().GetUserInfo(context.Background(), &grpcproto.GetUserInfoRequest{UserID: userTripModel.UserID})
 			if err != nil {
@@ -93,8 +96,10 @@ func (s *tripService) ListDriverTrip(userID string, state, limit int32) (*grpcpr
 				distance := utils.Distance(locationInfo.From, locationInfo.To)
 				userTripRPC.Distance = float32(distance / 1000)
 				driverTrip.UserTrips = append(driverTrip.UserTrips, userTripRPC)
+				totalIncome += int(userTripRPC.Price)
 			}
 		}
+		driverTrip.TotalIncome = int64(totalIncome)
 		response.Trips = append(response.Trips, driverTrip)
 	}
 	return response, nil
