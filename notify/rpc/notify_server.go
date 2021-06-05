@@ -49,13 +49,14 @@ func (n *notifyServer) GetNotify(ctx context.Context, req *grpcproto.GetNotifyRe
 // AddUserToken as the func name
 func (n *notifyServer) AddUserToken(ctx context.Context, req *grpcproto.AddUserTokenReq) (resp *grpcproto.AddUserTokenResp, err error) {
 	// pre-exec check
-	if req == nil || req.UserToken == nil {
+	md := base.RPCMetadataFromIncoming(ctx)
+	if req == nil || req.Token == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	token := &grpcproto.UserToken{
-		UserID: req.UserToken.UserID,
-		Token:  req.UserToken.Token,
+		UserID: md.UserID,
+		Token:  req.Token,
 	}
 
 	if err = repository.GetNotifyRepo().SaveUserToken(ctx, token); err != nil {
@@ -91,11 +92,12 @@ func (n *notifyServer) PushNotify(ctx context.Context, req *grpcproto.PushNotify
 		deviceTokens = append(deviceTokens, tokens[i].Token)
 	}
 	msg := &messaging.MulticastMessage{
-		Data: map[string]string{
-			"Title":   req.Notification.Title,
-			"Message": req.Notification.Message,
-		},
 		Tokens: deviceTokens,
+		Notification: &messaging.Notification{
+			Body:     req.Notification.Message,
+			Title:    req.Notification.Title,
+			ImageURL: req.Notification.Image,
+		},
 	}
 	// send message
 	_, err = n.fcmClient.SendMulticast(ctx, msg)

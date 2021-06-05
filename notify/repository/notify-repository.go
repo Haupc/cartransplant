@@ -71,7 +71,6 @@ func (n *notifyRepo) GetAllNotifyRepoByUserID(ctx context.Context, userID string
 	err = n.db.WithContext(ctx).Table("notification").
 		Where("user_id = ?", userID).
 		Order("created_time DESC").
-		Offset(offset).Limit(limit).
 		Find(&notis).Error
 
 	if err != nil {

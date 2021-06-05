@@ -7,6 +7,7 @@ message notifyMessage {
     int64 createdTime = 2;
     string title = 3;
     string message = 4;
+    string image = 5;
 }
 message getNotifyResponse {
     repeated notifyMessage notifications = 1;
@@ -29,7 +30,7 @@ service notify {
 }
 
 message AddUserTokenReq {
-    UserToken UserToken = 1;
+    string Token = 1;
 }
 
 message AddUserTokenResp {

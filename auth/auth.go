@@ -56,9 +56,11 @@ func main() {
 		carRoutes.POST("/take-trip", carController.TakeTrip)
 		carRoutes.GET("/driver/list-trip", carController.ListDriverTrip)
 	}
-	notifyRoute := r.Group("/noti")
+	notifyRoute := r.Group("/noti", middleware.AuthorizeJWTFirebase())
 	{
 		notifyRoute.POST("/test-push-noti", notifyController.PushNotify)
+		notifyRoute.POST("/register-token", notifyController.RegisterToken)
+		notifyRoute.GET("/list-notifications", notifyController.GetNotify)
 	}
 	r.Run(":8080")
 }

@@ -5,3 +5,5 @@ cd ~/project/cartransplant/car
 go build
 cd ~/project/cartransplant/geometry
 go build
+cd ~/project/cartransplant/notify
+go build
