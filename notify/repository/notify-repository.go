@@ -68,7 +68,7 @@ func (n *notifyRepo) SaveUserToken(ctx context.Context, token *grpcproto.UserTok
 }
 
 func (n *notifyRepo) GetAllNotifyRepoByUserID(ctx context.Context, userID string, limit int, offset int) (notis []*grpcproto.NotifyMessage, err error) {
-	err = n.db.WithContext(ctx).Model(&grpcproto.NotifyMessage{}).
+	err = n.db.WithContext(ctx).Table("notification").
 		Where("user_id = ?", userID).
 		Order("created_time DESC").
 		Offset(offset).Limit(limit).
@@ -87,7 +87,7 @@ func (n *notifyRepo) SaveNotification(ctx context.Context, notification *grpcpro
 		return errors.New("Nil noti")
 	}
 
-	err = n.db.WithContext(ctx).Model(&grpcproto.NotifyMessage{}).Save(notification).Error
+	err = n.db.WithContext(ctx).Table("notification").Save(notification).Error
 
 	if err != nil {
 		return err
