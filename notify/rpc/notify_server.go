@@ -3,6 +3,7 @@ package notify
 import (
 	"context"
 
+	"github.com/haupc/cartransplant/base"
 	"github.com/haupc/cartransplant/grpcproto"
 	"github.com/haupc/cartransplant/notify/repository"
 	"google.golang.org/grpc/codes"
@@ -24,7 +25,9 @@ func (n *notifyServer) GetNotify(ctx context.Context, req *grpcproto.GetNotifyRe
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	notifications, err := repository.GetNotifyRepo().GetAllNotifyRepoByUserID(ctx, int(req.Limit), int(req.Offset))
+	md := base.RPCMetadataFromIncoming(ctx)
+
+	notifications, err := repository.GetNotifyRepo().GetAllNotifyRepoByUserID(ctx, md.UserID, int(req.Limit), int(req.Offset))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
