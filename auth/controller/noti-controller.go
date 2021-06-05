@@ -40,7 +40,7 @@ func (n *notifyController) PushNotify(ctx *gin.Context) {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
 		return
 	}
-	response, err := n.fcmClient.Send(ctx, notifyRequest.ToFcmMessage())
+	response, err := n.fcmClient.Send(ctx, &notifyRequest.Data)
 	if err != nil {
 		respose := utils.BuildErrorResponse("Push noti failed", err.Error(), body)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
