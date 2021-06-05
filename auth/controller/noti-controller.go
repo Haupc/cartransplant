@@ -8,7 +8,6 @@ import (
 	"firebase.google.com/go/messaging"
 	"github.com/gin-gonic/gin"
 	"github.com/haupc/cartransplant/auth/config"
-	"github.com/haupc/cartransplant/auth/dto"
 	"github.com/haupc/cartransplant/auth/utils"
 )
 
@@ -32,7 +31,7 @@ func GetNotifyController() NotifyController {
 }
 
 func (n *notifyController) PushNotify(ctx *gin.Context) {
-	var notifyRequest dto.FcmDTO
+	var notifyRequest messaging.Message
 	body, _ := ioutil.ReadAll(ctx.Request.Body)
 	err := json.Unmarshal(body, &notifyRequest)
 	if err != nil {
@@ -40,7 +39,7 @@ func (n *notifyController) PushNotify(ctx *gin.Context) {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
 		return
 	}
-	response, err := n.fcmClient.Send(ctx, &notifyRequest.Data)
+	response, err := n.fcmClient.Send(ctx, &notifyRequest)
 	if err != nil {
 		respose := utils.BuildErrorResponse("Push noti failed", err.Error(), body)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
