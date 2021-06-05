@@ -52,7 +52,17 @@ func (c *carController) ListDriverTrip(ctx *gin.Context) {
 		log.Printf("Parse limit err")
 		limit = 10
 	}
-	respose, err := c.carClient.ListDriverTrip(middleware.RPCNewContextFromContext(ctx), &grpcproto.Int{Value: int64(limit)})
+	stateString := ctx.Query("state")
+	state, err := strconv.Atoi(stateString)
+	if err != nil {
+		log.Printf("Parse limit err")
+		state = 10
+	}
+	request := &grpcproto.ListDriverTripRequest{
+		State: int32(state),
+		Limit: int32(limit),
+	}
+	respose, err := c.carClient.ListDriverTrip(middleware.RPCNewContextFromContext(ctx), request)
 	if err != nil {
 		respose := utils.BuildErrorResponse("Something wrong happened", err.Error(), nil)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)

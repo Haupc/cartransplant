@@ -33,7 +33,7 @@ type TripService interface {
 	FindTrip(from *grpcproto.Point, to *grpcproto.Point, beginLeaveTime int64, endLeaveTime int64, opt int32) ([]trip_dto.FindTripResponse, error)
 	TakeTrip(userID string, driverTripID, beginLeaveTime, endLeaveTime int64, seat int32, from, to *grpcproto.Point) error
 	ListUserTrip(userID string, state int32) (*grpcproto.ListUserTripResponse, error)
-	ListDriverTrip(userID string, limit int32) (*grpcproto.ListDriverTripResponse, error)
+	ListDriverTrip(userID string, state, limit int32) (*grpcproto.ListDriverTripResponse, error)
 }
 
 func GetTripService() TripService {
@@ -47,8 +47,8 @@ func GetTripService() TripService {
 	return _tripService
 }
 
-func (s *tripService) ListDriverTrip(userID string, limit int32) (*grpcproto.ListDriverTripResponse, error) {
-	tripModels, err := s.TripRepo.GetTripByUserID(userID, limit)
+func (s *tripService) ListDriverTrip(userID string, state, limit int32) (*grpcproto.ListDriverTripResponse, error) {
+	tripModels, err := s.TripRepo.GetTripByUserID(userID, state, limit)
 	if err != nil {
 		return nil, err
 	}

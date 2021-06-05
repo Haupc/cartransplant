@@ -8,8 +8,8 @@ import (
 	"github.com/haupc/cartransplant/grpcproto"
 )
 
-func (c *carServer) ListDriverTrip(ctx context.Context, req *grpcproto.Int) (*grpcproto.ListDriverTripResponse, error) {
+func (c *carServer) ListDriverTrip(ctx context.Context, req *grpcproto.ListDriverTripRequest) (*grpcproto.ListDriverTripResponse, error) {
 	md := base.RPCMetadataFromIncoming(ctx)
 	glog.V(3).Infof("metadata: %v", md)
-	return c.TripService.ListDriverTrip(md.UserID, int32(req.Value))
+	return c.TripService.ListDriverTrip(md.UserID, req.State, req.Limit)
 }
