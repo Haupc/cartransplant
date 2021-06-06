@@ -9,7 +9,7 @@ import (
 )
 
 func (c *carServer) FindTrip(ctx context.Context, req *grpcproto.FindTripRequest) (*grpcproto.JsonResponse, error) {
-	routes, err := c.TripService.FindTrip(req.From, req.To, req.BeginLeaveTime, req.EndLeaveTime, req.Option)
+	routes, err := c.TripService.FindTrip(req.From, req.To, req.BeginLeaveTime, req.EndLeaveTime, req.Type, req.Seat)
 	if err != nil {
 		log.Printf("FindTrip - Error: %v", err)
 		return nil, err

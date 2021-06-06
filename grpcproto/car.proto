@@ -31,7 +31,8 @@ message findTripRequest {
     int64 endLeaveTime = 2;
     point from = 3;
     point to = 4;
-    int32 option = 5;
+    int32 type = 5;
+    int32 seat = 6;
 }
 
 message carObject {

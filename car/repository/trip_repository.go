@@ -19,7 +19,7 @@ var tripRepository *tripRepo
 // tripRepo interact with db
 type TripRepo interface {
 	CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime time.Time, priceEachKm int64, seat int32) error
-	FindTrip(from *grpcproto.Point, to *grpcproto.Point) ([]model.Trip, error)
+	FindTrip(from *grpcproto.Point, to *grpcproto.Point, tripType int32) ([]model.Trip, error)
 	GetTripByID(tripID int64) (*model.Trip, error)
 	GetTripByUserID(userID string, state, startDate, endDate int32) ([]model.Trip, error)
 	GetTakenSeatByTripID(tripID int64) int32
@@ -93,7 +93,7 @@ func (r *tripRepo) CreateTrip(route dto.RoutingDTO, userID string, carID int64, 
 	lineString := makeLineString(route)
 	way_json, _ := json.Marshal(route)
 
-	query := fmt.Sprintf("insert into public.trip (user_id, car_id, max_distance, way, way_json, begin_leave_time, end_leave_time, fee_each_km, seat, state)  values (?, ?, ? , %s, ?, ?, ?, ?, ?, 1)", lineString)
+	query := fmt.Sprintf("insert into public.trip (user_id, car_id, max_distance, way, way_json, begin_leave_time, end_leave_time, fee_each_km, seat, state, type)  values (?, ?, ? , %s, ?, ?, ?, ?, ?, 1, 2)", lineString)
 	log.Printf("CreateTrip query: %s", query)
 	if err := r.db.Exec(query, userID, carID, maxDistance, way_json, beginLeaveTime, endLeaveTime, priceEachKm, seat).Error; err != nil {
 		log.Printf("CreateTrip query - Error: %v", err)
@@ -105,14 +105,14 @@ func (r *tripRepo) CreateTrip(route dto.RoutingDTO, userID string, carID int64, 
 // FindTrip conditions:
 // 1: summary distance < max_distance
 // 2: eta trip from -> from between ...
-func (r *tripRepo) FindTrip(from *grpcproto.Point, to *grpcproto.Point) ([]model.Trip, error) {
+func (r *tripRepo) FindTrip(from *grpcproto.Point, to *grpcproto.Point, tripType int32) ([]model.Trip, error) {
 	var tripModel []model.Trip
 	fromPoint := makePoint(from)
 	toPoint := makePoint(to)
 
 	condition := fmt.Sprintf("ST_Distance(%s, way) + ST_Distance(%s, way)", fromPoint, toPoint)
 
-	query := fmt.Sprintf("select * from public.trip where %s < max_distance order by %s asc limit 10", condition, condition)
+	query := fmt.Sprintf("select * from public.trip where %s < 2000*max_distance and type = %d order by %s asc limit 10", condition, tripType, condition)
 	if err := r.db.Raw(query).Find(&tripModel).Error; err != nil {
 		log.Printf("CreateTrip query - Error: %v", err)
 		return tripModel, err

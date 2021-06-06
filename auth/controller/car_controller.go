@@ -243,9 +243,9 @@ func (c *carController) RegisterTrip(ctx *gin.Context) {
 }
 
 func (c *carController) FindTrip(ctx *gin.Context) {
-	var findTripRequest dto.TripRequest
+	findTripRequest := &grpcproto.FindTripRequest{}
 	body, _ := ioutil.ReadAll(ctx.Request.Body)
-	err := json.Unmarshal(body, &findTripRequest)
+	err := json.Unmarshal(body, findTripRequest)
 	if err != nil {
 		respose := utils.BuildErrorResponse("Request wrong format", err.Error(), body)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
@@ -255,18 +255,11 @@ func (c *carController) FindTrip(ctx *gin.Context) {
 		findTripRequest.BeginLeaveTime = time.Now().Unix()
 	}
 	if findTripRequest.EndLeaveTime < findTripRequest.BeginLeaveTime {
-		respose := utils.BuildErrorResponse("Wrong time to search", err.Error(), body)
+		respose := utils.BuildErrorResponse("Wrong time to search", "", body)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
 		return
 	}
-	request := &grpcproto.FindTripRequest{
-		BeginLeaveTime: findTripRequest.BeginLeaveTime,
-		EndLeaveTime:   findTripRequest.EndLeaveTime,
-		From:           findTripRequest.From.ToGrpcPoint(),
-		To:             findTripRequest.To.ToGrpcPoint(),
-		Option:         findTripRequest.Opt,
-	}
-	response, err := c.carClient.FindTrip(middleware.RPCNewContextFromContext(ctx), request)
+	response, err := c.carClient.FindTrip(middleware.RPCNewContextFromContext(ctx), findTripRequest)
 	if err != nil {
 		respose := utils.BuildErrorResponse("Something wrong happened", err.Error(), body)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
@@ -299,23 +292,15 @@ func (c *carController) ListUserTrip(ctx *gin.Context) {
 }
 
 func (c *carController) TakeTrip(ctx *gin.Context) {
-	var findTripRequest dto.TripRequest
+	takeTripRequest := &grpcproto.TakeTripRequest{}
 	body, _ := ioutil.ReadAll(ctx.Request.Body)
-	err := json.Unmarshal(body, &findTripRequest)
+	err := json.Unmarshal(body, takeTripRequest)
 	if err != nil {
 		respose := utils.BuildErrorResponse("Request wrong format", err.Error(), body)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
 		return
 	}
-	request := &grpcproto.TakeTripRequest{
-		DriverTripID:   int32(findTripRequest.DriverTripID),
-		BeginLeaveTime: findTripRequest.BeginLeaveTime,
-		EndLeaveTime:   findTripRequest.EndLeaveTime,
-		From:           findTripRequest.From.ToGrpcPoint(),
-		To:             findTripRequest.To.ToGrpcPoint(),
-		Seat:           int32(findTripRequest.Seat),
-	}
-	_, err = c.carClient.TakeTrip(middleware.RPCNewContextFromContext(ctx), request)
+	_, err = c.carClient.TakeTrip(middleware.RPCNewContextFromContext(ctx), takeTripRequest)
 	if err != nil {
 		respose := utils.BuildErrorResponse("Take trip failed", err.Error(), nil)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)

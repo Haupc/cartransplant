@@ -31,7 +31,7 @@ type tripService struct {
 
 type TripService interface {
 	CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime, priceEachKm int64, seat int32) error
-	FindTrip(from *grpcproto.Point, to *grpcproto.Point, beginLeaveTime int64, endLeaveTime int64, opt int32) ([]trip_dto.FindTripResponse, error)
+	FindTrip(from *grpcproto.Point, to *grpcproto.Point, beginLeaveTime int64, endLeaveTime int64, tripType, seat int32) ([]trip_dto.FindTripResponse, error)
 	TakeTrip(userID string, driverTripID, beginLeaveTime, endLeaveTime int64, seat int32, from, to *grpcproto.Point) error
 	ListUserTrip(userID string, state int32) (*grpcproto.ListUserTripResponse, error)
 	ListDriverTrip(userID string, state, startDate, endDate int32) (*grpcproto.ListDriverTripResponse, error)
@@ -218,8 +218,8 @@ func (s *tripService) CreateTrip(route dto.RoutingDTO, userID string, carID int6
 	return s.TripRepo.CreateTrip(route, userID, carID, maxDistance, timeStartTime, timeEndTime, priceEachKm, seat)
 }
 
-func (s *tripService) FindTrip(from *grpcproto.Point, to *grpcproto.Point, beginLeaveTime int64, endLeaveTime int64, opt int32) ([]trip_dto.FindTripResponse, error) {
-	models, err := s.TripRepo.FindTrip(from, to)
+func (s *tripService) FindTrip(from *grpcproto.Point, to *grpcproto.Point, beginLeaveTime int64, endLeaveTime int64, tripType, seat int32) ([]trip_dto.FindTripResponse, error) {
+	models, err := s.TripRepo.FindTrip(from, to, tripType)
 	if err != nil {
 		return nil, err
 	}
@@ -250,9 +250,9 @@ func (s *tripService) FindTrip(from *grpcproto.Point, to *grpcproto.Point, begin
 			return nil, err
 		}
 		realBeginLeaveTime := float64(m.BeginLeaveTime.Unix()) + subRoute.Routes[0].Duration
-		realEndeaveTime := float64(m.EndLeaveTime.Unix()) + subRoute.Routes[0].Duration
+		realEndLeaveTime := float64(m.EndLeaveTime.Unix()) + subRoute.Routes[0].Duration
 		remainingSeat := m.Seat - s.TripRepo.GetTakenSeatByTripID(int64(m.ID))
-		if !(int64(realEndeaveTime) < beginLeaveTime || int64(realBeginLeaveTime) > endLeaveTime) {
+		if !(int64(realEndLeaveTime) < beginLeaveTime || int64(realBeginLeaveTime) > endLeaveTime) && seat < remainingSeat {
 			carModel, err := s.CarRepo.GetCarByID(context.Background(), int(m.CarID))
 			if err != nil {
 				log.Println("Parse json err: ", err)
