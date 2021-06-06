@@ -35,7 +35,7 @@ func (n *notifyRepo) SaveNotification(noti *model.Notification) error {
 
 func (n *notifyRepo) GetAllNotifyByUserID(userID string) ([]*model.Notification, error) {
 	var result []*model.Notification
-	if err := n.db.Where("user_id = ?", userID).Find(&result).Error; err != nil {
+	if err := n.db.Where("user_id = ?", userID).Order("created_at DESC").Find(&result).Error; err != nil {
 		glog.V(3).Infof("GetAllNotifyByUserID - Error: %v", err)
 		return nil, err
 	}
