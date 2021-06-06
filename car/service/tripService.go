@@ -34,6 +34,7 @@ type TripService interface {
 	TakeTrip(userID string, driverTripID, beginLeaveTime, endLeaveTime int64, seat int32, from, to *grpcproto.Point) error
 	ListUserTrip(userID string, state int32) (*grpcproto.ListUserTripResponse, error)
 	ListDriverTrip(userID string, state, startDate, endDate int32) (*grpcproto.ListDriverTripResponse, error)
+	RegisterTripUser(userID string, beginLeaveTime, endLeaveTime int64, from, to *grpcproto.Point, seat, tripType int32) error
 }
 
 func GetTripService() TripService {
@@ -45,6 +46,33 @@ func GetTripService() TripService {
 		}
 	}
 	return _tripService
+}
+
+func (s *tripService) RegisterTripUser(userID string, beginLeaveTime, endLeaveTime int64, from, to *grpcproto.Point, seat, tripType int32) error {
+	if beginLeaveTime < time.Now().Unix() {
+		beginLeaveTime = time.Now().Unix()
+	}
+	if beginLeaveTime > endLeaveTime {
+		return errors.New("Invalid time")
+	}
+	locationInfo, _ := json.Marshal(trip_dto.TripLocationInfo{
+		From: from,
+		To:   to,
+	})
+	passengerTrip := model.PassengerTrip{
+		UserID:         userID,
+		Seat:           seat,
+		Location:       string(locationInfo),
+		State:          1,
+		BeginLeaveTime: time.Unix(beginLeaveTime, 0),
+		EndLeaveTime:   time.Unix(endLeaveTime, 0),
+	}
+	err := s.PassengerTripRepo.Create(&passengerTrip)
+	if err != nil {
+		log.Printf("RegisterTripUser - Error: %v", err)
+		return err
+	}
+	return nil
 }
 
 func (s *tripService) ListDriverTrip(userID string, state, startDate, endDate int32) (*grpcproto.ListDriverTripResponse, error) {
