@@ -15,6 +15,8 @@ type PassengerTripRepo interface {
 	FindUserTrip(model model.PassengerTrip) ([]model.PassengerTrip, error)
 	FindHistoryTrip(userID string) ([]model.PassengerTrip, error)
 	FindPendingTrip(seat, radius, tripType int32, rootPoint *grpcproto.Point) ([]model.PassengerTrip, error)
+	Update(model *model.PassengerTrip) error
+	FindPassengerTripByID(userTripID int32) (*model.PassengerTrip, error)
 }
 
 var (
@@ -33,6 +35,19 @@ func GetPassengerTripRepo() PassengerTripRepo {
 		}
 	}
 	return _passengerTripRepo
+}
+
+func (r *passengerTripRepo) FindPassengerTripByID(userTripID int32) (*model.PassengerTrip, error) {
+	var result *model.PassengerTrip
+	if err := r.db.Where("id = ?", userTripID).Find(&result).Error; err != nil {
+		log.Printf("FindPassengerTripByID - Error: %v", err)
+		return nil, err
+	}
+	return result, nil
+}
+
+func (r *passengerTripRepo) Update(passengerTrip *model.PassengerTrip) error {
+	return r.db.Save(passengerTrip).Error
 }
 
 func (r *passengerTripRepo) FindPendingTrip(seat, radius, tripType int32, rootPoint *grpcproto.Point) ([]model.PassengerTrip, error) {

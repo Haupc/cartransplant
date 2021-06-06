@@ -16,6 +16,7 @@ import (
 	"github.com/haupc/cartransplant/car/utils"
 	"github.com/haupc/cartransplant/geometry/client"
 	"github.com/haupc/cartransplant/geometry/dto"
+	"gorm.io/gorm"
 
 	"github.com/haupc/cartransplant/grpcproto"
 )
@@ -36,6 +37,10 @@ type TripService interface {
 	ListDriverTrip(userID string, state, startDate, endDate int32) (*grpcproto.ListDriverTripResponse, error)
 	RegisterTripUser(userID string, beginLeaveTime, endLeaveTime int64, from, to *grpcproto.Point, seat, tripType int32) error
 	FindPendingTrip(seat, radius, tripType int32, rootPoint *grpcproto.Point) (*grpcproto.ListUserTripResponse, error)
+	UpdateUserTrip(driverTripID, userTripID, userTripPrice int32) error
+	GetPassengerTripByID(userTripID int32) (*model.PassengerTrip, error)
+	CreateTripByUserTrip(tripModel *model.Trip) error
+	GetLastTripID(userID string, carID, maxDistance, priceEachKm, totalSeat int32) (int32, error)
 }
 
 func GetTripService() TripService {
@@ -47,6 +52,45 @@ func GetTripService() TripService {
 		}
 	}
 	return _tripService
+}
+
+func (s *tripService) GetLastTripID(userID string, carID, maxDistance, priceEachKm, totalSeat int32) (int32, error) {
+	tripModel := &model.Trip{
+		UserID:      userID,
+		CarID:       int64(carID),
+		MaxDistance: maxDistance,
+		FeeEachKm:   int64(priceEachKm),
+		Seat:        totalSeat,
+	}
+	result, err := s.TripRepo.FindLastTrip(tripModel)
+	if err != nil {
+		return 0, err
+	}
+	return int32(result.ID), err
+}
+
+func (s *tripService) CreateTripByUserTrip(tripModel *model.Trip) error {
+	return s.TripRepo.Create(tripModel)
+}
+
+func (s *tripService) GetPassengerTripByID(userTripID int32) (*model.PassengerTrip, error) {
+	return s.PassengerTripRepo.FindPassengerTripByID(userTripID)
+}
+
+func (s *tripService) UpdateUserTrip(driverTripID, userTripID, userTripPrice int32) error {
+	passengerTrip := &model.PassengerTrip{
+		Model: gorm.Model{
+			ID: uint(userTripID),
+		},
+		Price:  int64(userTripPrice),
+		TripID: int64(driverTripID),
+	}
+	err := s.PassengerTripRepo.Update(passengerTrip)
+	if err != nil {
+		log.Printf("UpdateUserTrip - Error: %v", err)
+		return err
+	}
+	return nil
 }
 
 func (s *tripService) FindPendingTrip(seat, radius, tripType int32, rootPoint *grpcproto.Point) (*grpcproto.ListUserTripResponse, error) {

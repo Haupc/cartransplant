@@ -23,6 +23,8 @@ type TripRepo interface {
 	GetTripByID(tripID int64) (*model.Trip, error)
 	GetTripByUserID(userID string, state, startDate, endDate int32) ([]model.Trip, error)
 	GetTakenSeatByTripID(tripID int64) int32
+	Create(model *model.Trip) error
+	FindLastTrip(model *model.Trip) (*model.Trip, error)
 }
 
 type tripRepo struct {
@@ -38,6 +40,20 @@ func GettripRepo() TripRepo {
 	}
 	return tripRepository
 }
+
+func (r *tripRepo) Create(model *model.Trip) error {
+	return r.db.Create(model).Error
+}
+
+func (r *tripRepo) FindLastTrip(tripModel *model.Trip) (*model.Trip, error) {
+	result := &model.Trip{}
+	if err := r.db.Where(tripModel).Order("created_at DESC").Find(result).Error; err != nil {
+		log.Printf("CreateTrip query - Error: %v", err)
+		return nil, err
+	}
+	return result, nil
+}
+
 func (r *tripRepo) GetTakenSeatByTripID(tripID int64) int32 {
 	var result int32
 	if err := r.db.Raw("select sum(seat) from passenger_trip where trip_id = ? and state = 2", 26).Scan(&result).Error; err != nil {
@@ -77,7 +93,7 @@ func (r *tripRepo) CreateTrip(route dto.RoutingDTO, userID string, carID int64, 
 	lineString := makeLineString(route)
 	way_json, _ := json.Marshal(route)
 
-	query := fmt.Sprintf("insert into public.trip (user_id, car_id, max_distance, way, way_json, begin_leave_time, end_leave_time, fee_each_km, seat)  values (?, ?, ? , %s, ?, ?, ?, ?, ?)", lineString)
+	query := fmt.Sprintf("insert into public.trip (user_id, car_id, max_distance, way, way_json, begin_leave_time, end_leave_time, fee_each_km, seat, state)  values (?, ?, ? , %s, ?, ?, ?, ?, ?, 1)", lineString)
 	log.Printf("CreateTrip query: %s", query)
 	if err := r.db.Exec(query, userID, carID, maxDistance, way_json, beginLeaveTime, endLeaveTime, priceEachKm, seat).Error; err != nil {
 		log.Printf("CreateTrip query - Error: %v", err)

@@ -9,6 +9,7 @@ import (
 	"firebase.google.com/go/messaging"
 	"github.com/gin-gonic/gin"
 	"github.com/haupc/cartransplant/auth/config"
+	"github.com/haupc/cartransplant/auth/dto"
 	"github.com/haupc/cartransplant/auth/middleware"
 	"github.com/haupc/cartransplant/auth/utils"
 	"github.com/haupc/cartransplant/grpcproto"
@@ -39,14 +40,16 @@ func GetNotifyController() NotifyController {
 }
 
 func (n *notifyController) RegisterToken(ctx *gin.Context) {
-	token := ctx.Query("token")
-	if token == "" {
-		respose := utils.BuildErrorResponse("Token empty", "", nil)
+	var registerTokenDTO dto.RegisterTokenDTO
+	body, _ := ioutil.ReadAll(ctx.Request.Body)
+	err := json.Unmarshal(body, &registerTokenDTO)
+	if err != nil {
+		respose := utils.BuildErrorResponse("Request wrong format", err.Error(), body)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
 		return
 	}
-	_, err := n.notifyClient.AddUserToken(middleware.RPCNewContextFromContext(ctx), &grpcproto.AddUserTokenReq{
-		Token: token,
+	_, err = n.notifyClient.AddUserToken(middleware.RPCNewContextFromContext(ctx), &grpcproto.AddUserTokenReq{
+		Token: registerTokenDTO.Token,
 	})
 	if err != nil {
 		respose := utils.BuildErrorResponse("Something wrong happened", err.Error(), nil)

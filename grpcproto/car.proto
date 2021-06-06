@@ -107,6 +107,16 @@ message findPendingTripRequest {
     string longitude = 4;
     float radius = 5;
 }
+
+message driverTakeTripRequest {
+    int32 remainingSeat = 1;
+    int32 priceEachKm = 2;
+    int32 userTripID = 3;
+    int32 userTripPrice = 4;
+    int32 maxDistance = 5;
+    int32 carID = 6;
+}
+
 service car {
     // driver
     rpc registerTrip(registerTripRequest) returns (grpcproto.bool);
@@ -116,6 +126,7 @@ service car {
     rpc deleteCar (deleteCarRequest) returns (grpcproto.bool);
     rpc listDriverTrip(listDriverTripRequest) returns (listDriverTripResponse);
     rpc findPendingTrip(findPendingTripRequest) returns (listUserTripResponse);
+    rpc driverTakeTrip(driverTakeTripRequest) returns (grpcproto.bool);
     // user
     rpc findTrip(findTripRequest) returns (jsonResponse);
     rpc takeTrip(takeTripRequest) returns (grpcproto.bool);
