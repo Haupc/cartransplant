@@ -35,6 +35,7 @@ type TripService interface {
 	ListUserTrip(userID string, state int32) (*grpcproto.ListUserTripResponse, error)
 	ListDriverTrip(userID string, state, startDate, endDate int32) (*grpcproto.ListDriverTripResponse, error)
 	RegisterTripUser(userID string, beginLeaveTime, endLeaveTime int64, from, to *grpcproto.Point, seat, tripType int32) error
+	FindPendingTrip(seat, radius, tripType int32, rootPoint *grpcproto.Point) (*grpcproto.ListUserTripResponse, error)
 }
 
 func GetTripService() TripService {
@@ -46,6 +47,26 @@ func GetTripService() TripService {
 		}
 	}
 	return _tripService
+}
+
+func (s *tripService) FindPendingTrip(seat, radius, tripType int32, rootPoint *grpcproto.Point) (*grpcproto.ListUserTripResponse, error) {
+	passengerTrips, err := s.PassengerTripRepo.FindPendingTrip(seat, radius, tripType, rootPoint)
+	if err != nil {
+		return nil, err
+	}
+	response := &grpcproto.ListUserTripResponse{
+		UserTrip: []*grpcproto.UserTrip{},
+	}
+	for _, trip := range passengerTrips {
+		userInfo, err := auth_client.GetAuthClient().GetUserInfo(context.Background(), &grpcproto.GetUserInfoRequest{UserID: trip.UserID})
+		if err != nil {
+			log.Printf("get user info - error: %v", err)
+		}
+
+		grpcUserTrip, _ := trip.ToGrpcListUserTripResponse(nil, userInfo, nil)
+		response.UserTrip = append(response.UserTrip, grpcUserTrip)
+	}
+	return response, nil
 }
 
 func (s *tripService) RegisterTripUser(userID string, beginLeaveTime, endLeaveTime int64, from, to *grpcproto.Point, seat, tripType int32) error {

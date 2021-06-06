@@ -17,6 +17,15 @@ message registerTripRequest {
     int32 seat = 8;
 }
 
+message userRegisterTripRequest {
+    int64 beginLeaveTime = 1;
+    int64 endLeaveTime = 2;
+    point from = 3;
+    point to = 4;
+    int32 seat = 5;
+    int32 type = 6;
+}
+
 message findTripRequest {
     int64 beginLeaveTime = 1;
     int64 endLeaveTime = 2;
@@ -91,6 +100,13 @@ message listDriverTripRequest {
     int32 startDate = 2;
     int32 endDate = 3;
 }
+message findPendingTripRequest {
+    int32 seat = 1;
+    int32 type = 2;
+    string latitude = 3;
+    string longitude = 4;
+    float radius = 5;
+}
 service car {
     // driver
     rpc registerTrip(registerTripRequest) returns (grpcproto.bool);
@@ -99,9 +115,10 @@ service car {
     rpc updateCar (carObject) returns (grpcproto.bool);
     rpc deleteCar (deleteCarRequest) returns (grpcproto.bool);
     rpc listDriverTrip(listDriverTripRequest) returns (listDriverTripResponse);
+    rpc findPendingTrip(findPendingTripRequest) returns (listUserTripResponse);
     // user
     rpc findTrip(findTripRequest) returns (jsonResponse);
     rpc takeTrip(takeTripRequest) returns (grpcproto.bool);
     rpc listUserTrip(int) returns (listUserTripResponse);
-
+    rpc userRegisterTrip(userRegisterTripRequest) returns (grpcproto.bool);
 }

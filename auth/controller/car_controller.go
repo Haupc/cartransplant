@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -30,6 +31,8 @@ type CarController interface {
 	ListMyCar(ctx *gin.Context)
 	ListUserTrip(ctx *gin.Context)
 	ListDriverTrip(ctx *gin.Context)
+	RegisterTripUser(ctx *gin.Context)
+	FindPendingTrip(ctx *gin.Context)
 }
 
 type carController struct {
@@ -43,6 +46,76 @@ func GetCarController() CarController {
 		}
 	}
 	return _carController
+}
+
+func (c *carController) FindPendingTrip(ctx *gin.Context) {
+	seatString := ctx.Query("seat")
+	seat, err := strconv.Atoi(seatString)
+	if err != nil || seat < 1 {
+		respose := utils.BuildErrorResponse("Param seat invalid", err.Error(), nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	typeString := ctx.Query("type")
+	tripType, err := strconv.Atoi(typeString)
+	if err != nil || tripType < 1 {
+		respose := utils.BuildErrorResponse("Param type invalid", err.Error(), nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	radiusString := ctx.Query("radius")
+	radius, err := strconv.ParseFloat(radiusString, 64)
+	if err != nil || radius < 1 {
+		respose := utils.BuildErrorResponse("Param radius invalid", err.Error(), nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	latitude := ctx.Query("lat")
+	if latitude == "" {
+		respose := utils.BuildErrorResponse("Param lat invalid", err.Error(), nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	longitude := ctx.Query("long")
+	if longitude == "" {
+		respose := utils.BuildErrorResponse("Param long invalid", err.Error(), nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	request := &grpcproto.FindPendingTripRequest{
+		Seat:      int32(seat),
+		Type:      int32(tripType),
+		Latitude:  latitude,
+		Longitude: longitude,
+		Radius:    float32(radius * 1000),
+	}
+	response, err := c.carClient.FindPendingTrip(context.Background(), request)
+	if err != nil {
+		respose := utils.BuildErrorResponse("Something wrong happened", err.Error(), nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	ctx.JSON(http.StatusOK, utils.BuildResponse(true, "success", response))
+
+}
+
+func (c *carController) RegisterTripUser(ctx *gin.Context) {
+	var userRegisterTripRequest grpcproto.UserRegisterTripRequest
+	body, _ := ioutil.ReadAll(ctx.Request.Body)
+	err := json.Unmarshal(body, &userRegisterTripRequest)
+	if err != nil {
+		respose := utils.BuildErrorResponse("Request wrong format", err.Error(), body)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	// TODO : logic here
+	_, err = c.carClient.UserRegisterTrip(middleware.RPCNewContextFromContext(ctx), &userRegisterTripRequest)
+	if err != nil {
+		respose := utils.BuildErrorResponse("Something wrong happened", err.Error(), nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	ctx.JSON(http.StatusOK, utils.BuildResponse(true, "success", nil))
 }
 
 func (c *carController) ListDriverTrip(ctx *gin.Context) {
