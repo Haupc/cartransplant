@@ -2,18 +2,23 @@ package notify
 
 import (
 	"context"
+	"time"
 
 	"firebase.google.com/go/messaging"
+	"github.com/golang/glog"
 	"github.com/haupc/cartransplant/auth/config"
 	"github.com/haupc/cartransplant/base"
 	"github.com/haupc/cartransplant/grpcproto"
+	"github.com/haupc/cartransplant/notify/model"
 	"github.com/haupc/cartransplant/notify/repository"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type notifyServer struct {
-	fcmClient *messaging.Client
+	fcmClient     *messaging.Client
+	notifyRepo    repository.NotifyRepo
+	userTokenRepo repository.UserTokenRepo
 }
 
 var _notifyServer *notifyServer
@@ -21,28 +26,31 @@ var _notifyServer *notifyServer
 func NewNotifyServer() *notifyServer {
 	if _notifyServer == nil {
 		_notifyServer = &notifyServer{
-			fcmClient: config.GetFcmClient(),
+			fcmClient:     config.GetFcmClient(),
+			notifyRepo:    repository.GetNotifyRepo(),
+			userTokenRepo: repository.GetUserTokenRepo(),
 		}
 	}
 	return _notifyServer
 }
 
-// ------------------------------
-// GetNotify get notifications by userID, limit & offset
+// // ------------------------------
+// // GetNotify get notifications by userID, limit & offset
 func (n *notifyServer) GetNotify(ctx context.Context, req *grpcproto.GetNotifyRequest) (resp *grpcproto.GetNotifyResponse, err error) {
-	// pre-exec check
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
 
 	md := base.RPCMetadataFromIncoming(ctx)
-
-	notifications, err := repository.GetNotifyRepo().GetAllNotifyRepoByUserID(ctx, md.UserID, int(req.Limit), int(req.Offset))
+	glog.V(3).Infof("GetNotify - metadata: %v", md)
+	notifications, err := n.notifyRepo.GetAllNotifyByUserID(md.UserID)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-
-	return &grpcproto.GetNotifyResponse{Notifications: notifications}, nil
+	respose := &grpcproto.GetNotifyResponse{
+		Notifications: []*grpcproto.NotifyMessage{},
+	}
+	for _, notify := range notifications {
+		respose.Notifications = append(respose.Notifications, notify.ToRPCNotification())
+	}
+	return respose, nil
 }
 
 // ------------------------------
@@ -54,12 +62,7 @@ func (n *notifyServer) AddUserToken(ctx context.Context, req *grpcproto.AddUserT
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	token := &grpcproto.UserToken{
-		UserID: md.UserID,
-		Token:  req.Token,
-	}
-
-	if err = repository.GetNotifyRepo().SaveUserToken(ctx, token); err != nil {
+	if err = n.userTokenRepo.SaveUserToken(md.UserID, req.Token); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
@@ -70,29 +73,27 @@ func (n *notifyServer) AddUserToken(ctx context.Context, req *grpcproto.AddUserT
 // PushNotify save notify to db, query user tokens & push to firebase
 func (n *notifyServer) PushNotify(ctx context.Context, req *grpcproto.PushNotifyReq) (resp *grpcproto.PushNotifyResp, err error) {
 	// pre-exec check
+	md := base.RPCMetadataFromIncoming(ctx)
 	if req == nil || req.Notification == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	// save noti to db
-	if err = repository.GetNotifyRepo().SaveNotification(ctx, req.Notification); err != nil {
+	noti := &model.Notification{
+		UserID:    req.Notification.UserID,
+		Title:     req.Notification.Title,
+		Message:   req.Notification.Message,
+		CreatedAt: time.Now(),
+		Image:     req.Notification.Image,
+	}
+	if err = repository.GetNotifyRepo().SaveNotification(noti); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	// get all token
-	tokens, err := repository.GetNotifyRepo().GetAllTokenByUserID(ctx, req.Notification.UserID)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	// make firebase message
-	// create token list
-	deviceTokens := make([]string, 0, len(tokens))
-	for i := range tokens {
-		deviceTokens = append(deviceTokens, tokens[i].Token)
-	}
+	tokens := n.userTokenRepo.GetAllTokenByUserID(md.UserID)
 	msg := &messaging.MulticastMessage{
-		Tokens: deviceTokens,
+		Tokens: tokens,
 		Notification: &messaging.Notification{
 			Body:     req.Notification.Message,
 			Title:    req.Notification.Title,
