@@ -7,5 +7,5 @@ import (
 )
 
 func main() {
-	fmt.Println(service.GetTripService().ListDriverTrip("xLPrxESgCeggCEpQXlDvhfOYGyw2", 1))
+	fmt.Println(service.GetTripService().CancelTrip("xLPrxESgCeggCEpQXlDvhfOYGyw2", 15))
 }

@@ -318,7 +318,7 @@ func (c *carController) TakeTrip(ctx *gin.Context) {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
 		return
 	}
-	if takeTripRequest.Type == 1 {
+	if takeTripRequest.Type == 1 || takeTripRequest.DriverTripID == 0 {
 		_, err = c.carClient.UserRegisterTrip(middleware.RPCNewContextFromContext(ctx), takeTripRequest)
 	} else {
 		_, err = c.carClient.TakeTrip(middleware.RPCNewContextFromContext(ctx), takeTripRequest)
