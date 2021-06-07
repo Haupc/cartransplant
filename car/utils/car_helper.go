@@ -17,6 +17,8 @@ func CarModelToCarRPC(car *model.Car) (carRPC *grpcproto.CarObject) {
 		LicensePlate: car.LicensePlate,
 		Color:        car.Color,
 		Model:        car.Model,
+		VehicleBrand: car.VehicleBrand,
+		Seat:         car.Seat,
 	}
 }
 
@@ -26,10 +28,12 @@ func CarRPCToCarModel(car *grpcproto.CarObject) (carModel *model.Car) {
 		LicensePlate: car.LicensePlate,
 		Color:        car.Color,
 		Model:        car.Model,
+		Seat:         car.Seat,
+		VehicleBrand: car.VehicleBrand,
 	}
 }
 
-func Distance(from, to *grpcproto.Point) float64 {
+func Distance(from, to *grpcproto.Point) (float64, float64) {
 	request := &grpcproto.RouteRequest{
 		From: from,
 		To:   to,
@@ -37,13 +41,13 @@ func Distance(from, to *grpcproto.Point) float64 {
 	response, err := client.GetGeomClient().GetRouting(context.Background(), request)
 	if err != nil {
 		log.Println("Distance - Error:", err)
-		return 0
+		return 0, 0
 	}
 	var route dto.RoutingDTO
 	err = json.Unmarshal(response.JsonResponse, &route)
 	if err != nil {
 		log.Println("Distance - Error:", err)
-		return 0
+		return 0, 0
 	}
-	return route.Routes[0].Distance
+	return route.Routes[0].Distance, route.Routes[0].Duration
 }

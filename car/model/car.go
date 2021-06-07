@@ -9,6 +9,8 @@ type Car struct {
 	Color        string `gorm:"Column:color; Type:varchar"`
 	Model        string `gorm:"Column:model; Type:varchar"`
 	Deleted      bool   `gorm:"Column:deleted; Type:bool; Default:false"`
+	Seat         int32  `gorm:"Column:seat"`
+	VehicleBrand string `gorm:"Column:vehicle_brand"`
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 	DeletedAt    time.Time

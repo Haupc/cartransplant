@@ -28,6 +28,7 @@ func RouteResponseToDTO(response *dto.RouteResponse) dto.RoutingDTO {
 			Steps:    steps,
 			Distance: route.Distance,
 			Duration: route.Duration,
+			Price:    int64(route.Distance) * 12,
 		})
 	}
 	return result

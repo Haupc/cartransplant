@@ -15,6 +15,7 @@ type RouteDTO struct {
 	Steps    []StepDTO `json:"steps"`
 	Duration float64   `json:"duration"`
 	Distance float64   `json:"distance"`
+	Price    int64     `json:"price"`
 }
 type RoutingDTO struct {
 	Waypoints []WaypointDTO `json:"waypoints"`

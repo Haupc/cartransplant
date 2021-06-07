@@ -124,6 +124,7 @@ func (s *tripService) RegisterTripUser(userID string, beginLeaveTime, endLeaveTi
 		From: from,
 		To:   to,
 	})
+	distance, _ := utils.Distance(from, to)
 	passengerTrip := model.PassengerTrip{
 		UserID:         userID,
 		Seat:           seat,
@@ -131,6 +132,7 @@ func (s *tripService) RegisterTripUser(userID string, beginLeaveTime, endLeaveTi
 		State:          1,
 		BeginLeaveTime: time.Unix(beginLeaveTime, 0),
 		EndLeaveTime:   time.Unix(endLeaveTime, 0),
+		Price:          int64(distance) * 12,
 	}
 	err := s.PassengerTripRepo.Create(&passengerTrip)
 	if err != nil {
@@ -186,8 +188,9 @@ func (s *tripService) ListDriverTrip(userID string, state, startDate, endDate in
 			}
 			userTripRPC, locationInfo := userTripModel.ToGrpcListUserTripResponse(nil, userInfo, nil)
 			if userTripRPC != nil || locationInfo != nil {
-				distance := utils.Distance(locationInfo.From, locationInfo.To)
+				distance, duration := utils.Distance(locationInfo.From, locationInfo.To)
 				userTripRPC.Distance = float32(distance / 1000)
+				userTripRPC.Duration = float32(duration)
 				driverTrip.UserTrips = append(driverTrip.UserTrips, userTripRPC)
 				totalIncome += int(userTripRPC.Price)
 			}
@@ -224,7 +227,7 @@ func (s *tripService) FindTrip(from *grpcproto.Point, to *grpcproto.Point, begin
 		return nil, err
 	}
 	// Distance calculator
-	distance := utils.Distance(from, to)
+	distance, _ := utils.Distance(from, to)
 
 	var result []trip_dto.FindTripResponse
 	for _, m := range models {
@@ -279,7 +282,7 @@ func (s *tripService) TakeTrip(userID string, driverTripID, beginLeaveTime, endL
 		From: from,
 		To:   to,
 	})
-	distance := utils.Distance(from, to)
+	distance, _ := utils.Distance(from, to)
 	driverTrip, _ := s.TripRepo.GetTripByID(driverTripID)
 
 	passengerTripModel := &model.PassengerTrip{
@@ -319,19 +322,24 @@ func (s *tripService) ListUserTrip(userID string, state int32) (*grpcproto.ListU
 		UserTrip: []*grpcproto.UserTrip{},
 	}
 	for _, u := range userTrips {
-		driverTrip, _ := s.TripRepo.GetTripByID(u.TripID)
-		userInfo, err := auth_client.GetAuthClient().GetUserInfo(context.Background(), &grpcproto.GetUserInfoRequest{UserID: u.UserID})
-		if err != nil {
-			log.Printf("Error getting user info: %v", err)
-			return nil, err
+		var userInfo *grpcproto.UserProfile
+		var carRpc *grpcproto.CarObject
+		if u.State == 2 || u.State == 3 {
+			driverTrip, _ := s.TripRepo.GetTripByID(u.TripID)
+			userInfo, err = auth_client.GetAuthClient().GetUserInfo(context.Background(), &grpcproto.GetUserInfoRequest{UserID: u.UserID})
+			if err != nil {
+				log.Printf("Error getting user info: %v", err)
+				return nil, err
+			}
+			carDB, _ := s.CarRepo.GetCarByID(context.Background(), int(driverTrip.CarID))
+			carRpc = utils.CarModelToCarRPC(carDB)
 		}
-		carDB, _ := s.CarRepo.GetCarByID(context.Background(), int(driverTrip.CarID))
-		carRpc := utils.CarModelToCarRPC(carDB)
 
 		userTripRPC, locationInfo := u.ToGrpcListUserTripResponse(nil, userInfo, carRpc)
 		if userTripRPC != nil || locationInfo != nil {
-			distance := utils.Distance(locationInfo.From, locationInfo.To)
+			distance, duration := utils.Distance(locationInfo.From, locationInfo.To)
 			userTripRPC.Distance = float32(distance / 1000)
+			userTripRPC.Duration = float32(duration)
 			response.UserTrip = append(response.UserTrip, userTripRPC)
 		}
 	}

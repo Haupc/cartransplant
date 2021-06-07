@@ -17,15 +17,6 @@ message registerTripRequest {
     int32 seat = 8;
 }
 
-message userRegisterTripRequest {
-    int64 beginLeaveTime = 1;
-    int64 endLeaveTime = 2;
-    point from = 3;
-    point to = 4;
-    int32 seat = 5;
-    int32 type = 6;
-}
-
 message findTripRequest {
     int64 beginLeaveTime = 1;
     int64 endLeaveTime = 2;
@@ -40,6 +31,8 @@ message carObject {
     string licensePlate = 2;
     string color = 3;
     string model = 4;
+    string vehicleBrand = 5;
+    int32 seat = 6;
 }
 
 message listCarResponse {
@@ -53,6 +46,7 @@ message takeTripRequest {
     point from = 4;
     point to = 5;
     int32 seat = 6;
+    int32 type = 7;
 }
 
 message userTrip {
@@ -67,6 +61,7 @@ message userTrip {
     int64 price = 9;
     float distance = 10;
     userProfile user = 11;
+    float duration = 12;
 }
 
 message listUserTripResponse {
@@ -132,5 +127,5 @@ service car {
     rpc findTrip(findTripRequest) returns (jsonResponse);
     rpc takeTrip(takeTripRequest) returns (grpcproto.bool);
     rpc listUserTrip(int) returns (listUserTripResponse);
-    rpc userRegisterTrip(userRegisterTripRequest) returns (grpcproto.bool);
+    rpc userRegisterTrip(takeTripRequest) returns (grpcproto.bool);
 }

@@ -21,6 +21,8 @@ func (c *carServer) RegisterCar(ctx context.Context, car *grpcproto.CarObject) (
 			LicensePlate: car.LicensePlate,
 			Color:        car.Color,
 			Model:        car.Model,
+			Seat:         car.Seat,
+			VehicleBrand: car.VehicleBrand,
 		}
 	)
 

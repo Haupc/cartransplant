@@ -100,16 +100,16 @@ func (c *carController) FindPendingTrip(ctx *gin.Context) {
 }
 
 func (c *carController) RegisterTripUser(ctx *gin.Context) {
-	var userRegisterTripRequest grpcproto.UserRegisterTripRequest
+	var takeTripRequest grpcproto.TakeTripRequest
 	body, _ := ioutil.ReadAll(ctx.Request.Body)
-	err := json.Unmarshal(body, &userRegisterTripRequest)
+	err := json.Unmarshal(body, &takeTripRequest)
 	if err != nil {
 		respose := utils.BuildErrorResponse("Request wrong format", err.Error(), body)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
 		return
 	}
 	// TODO : logic here
-	_, err = c.carClient.UserRegisterTrip(middleware.RPCNewContextFromContext(ctx), &userRegisterTripRequest)
+	_, err = c.carClient.UserRegisterTrip(middleware.RPCNewContextFromContext(ctx), &takeTripRequest)
 	if err != nil {
 		respose := utils.BuildErrorResponse("Something wrong happened", err.Error(), nil)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
@@ -300,7 +300,11 @@ func (c *carController) TakeTrip(ctx *gin.Context) {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
 		return
 	}
-	_, err = c.carClient.TakeTrip(middleware.RPCNewContextFromContext(ctx), takeTripRequest)
+	if takeTripRequest.Type == 1 {
+		_, err = c.carClient.UserRegisterTrip(middleware.RPCNewContextFromContext(ctx), takeTripRequest)
+	} else {
+		_, err = c.carClient.TakeTrip(middleware.RPCNewContextFromContext(ctx), takeTripRequest)
+	}
 	if err != nil {
 		respose := utils.BuildErrorResponse("Take trip failed", err.Error(), nil)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)

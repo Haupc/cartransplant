@@ -8,7 +8,7 @@ import (
 	"github.com/haupc/cartransplant/grpcproto"
 )
 
-func (c *carServer) UserRegisterTrip(ctx context.Context, req *grpcproto.UserRegisterTripRequest) (*grpcproto.Bool, error) {
+func (c *carServer) UserRegisterTrip(ctx context.Context, req *grpcproto.TakeTripRequest) (*grpcproto.Bool, error) {
 	md := base.RPCMetadataFromIncoming(ctx)
 	err := c.TripService.RegisterTripUser(md.UserID, req.BeginLeaveTime, req.EndLeaveTime, req.From, req.To, req.Seat, req.Type)
 	if err != nil {
