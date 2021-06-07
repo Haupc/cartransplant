@@ -1,8 +1,6 @@
 package model
 
 import (
-	"time"
-
 	"gorm.io/gorm"
 )
 
@@ -11,8 +9,8 @@ type Trip struct {
 	gorm.Model
 	WayJson        string
 	UserID         string
-	BeginLeaveTime time.Time
-	EndLeaveTime   time.Time
+	BeginLeaveTime int64
+	EndLeaveTime   int64
 	CarID          int64
 	MaxDistance    int32
 	FeeEachKm      int64

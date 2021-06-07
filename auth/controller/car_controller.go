@@ -85,39 +85,44 @@ func (c *carController) UserCancelTrip(ctx *gin.Context) {
 }
 
 func (c *carController) FindPendingTrip(ctx *gin.Context) {
-	seatString := ctx.Query("seat")
-	seat, err := strconv.Atoi(seatString)
-	if err != nil || seat < 1 {
-		respose := utils.BuildErrorResponse("Param seat invalid", err.Error(), nil)
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
-		return
-	}
-	typeString := ctx.Query("type")
-	tripType, err := strconv.Atoi(typeString)
-	if err != nil || tripType < 1 {
-		respose := utils.BuildErrorResponse("Param type invalid", err.Error(), nil)
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
-		return
-	}
-	radiusString := ctx.Query("radius")
-	radius, err := strconv.ParseFloat(radiusString, 64)
-	if err != nil || radius < 1 {
-		respose := utils.BuildErrorResponse("Param radius invalid", err.Error(), nil)
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
-		return
-	}
-	latitude := ctx.Query("lat")
-	if latitude == "" {
-		respose := utils.BuildErrorResponse("Param lat invalid", err.Error(), nil)
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
-		return
-	}
-	longitude := ctx.Query("long")
-	if longitude == "" {
-		respose := utils.BuildErrorResponse("Param long invalid", err.Error(), nil)
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
-		return
-	}
+	// seatString := ctx.Query("seat")
+	// seat, err := strconv.Atoi(seatString)
+	// if err != nil || seat < 0 {
+	// 	respose := utils.BuildErrorResponse("Param seat invalid", err.Error(), nil)
+	// 	ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+	// 	return
+	// }
+	// typeString := ctx.Query("type")
+	// tripType, err := strconv.Atoi(typeString)
+	// if err != nil || tripType < 1 {
+	// 	respose := utils.BuildErrorResponse("Param type invalid", err.Error(), nil)
+	// 	ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+	// 	return
+	// }
+	// radiusString := ctx.Query("radius")
+	// radius, err := strconv.ParseFloat(radiusString, 64)
+	// if err != nil || radius < 1 {
+	// 	respose := utils.BuildErrorResponse("Param radius invalid", err.Error(), nil)
+	// 	ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+	// 	return
+	// }
+	// latitude := ctx.Query("lat")
+	// if latitude == "" {
+	// 	respose := utils.BuildErrorResponse("Param lat invalid", err.Error(), nil)
+	// 	ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+	// 	return
+	// }
+	// longitude := ctx.Query("long")
+	// if longitude == "" {
+	// 	respose := utils.BuildErrorResponse("Param long invalid", err.Error(), nil)
+	// 	ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+	// 	return
+	// }
+	seat := 1
+	tripType := 1
+	latitude := "21.0294498"
+	longitude := "105.8544441"
+	radius := 3000
 	request := &grpcproto.FindPendingTripRequest{
 		Seat:      int32(seat),
 		Type:      int32(tripType),
@@ -234,6 +239,7 @@ func (c *carController) UpdateCar(ctx *gin.Context) {
 func (c *carController) RegisterCar(ctx *gin.Context) {
 	var registerCarRequest grpcproto.CarObject
 	body, _ := ioutil.ReadAll(ctx.Request.Body)
+	log.Println(string(body))
 	err := json.Unmarshal(body, &registerCarRequest)
 	if err != nil {
 		respose := utils.BuildErrorResponse("Request wrong format", err.Error(), body)
@@ -330,6 +336,7 @@ func (c *carController) ListUserTrip(ctx *gin.Context) {
 func (c *carController) TakeTrip(ctx *gin.Context) {
 	takeTripRequest := &grpcproto.TakeTripRequest{}
 	body, _ := ioutil.ReadAll(ctx.Request.Body)
+	log.Println(string(body))
 	err := json.Unmarshal(body, takeTripRequest)
 	if err != nil {
 		respose := utils.BuildErrorResponse("Request wrong format", err.Error(), body)

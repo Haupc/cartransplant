@@ -32,7 +32,7 @@ func (c *carServer) DriverTakeTrip(ctx context.Context, req *grpcproto.DriverTak
 		return nil, err
 	}
 	totalSeat := req.RemainingSeat + userTrip.Seat
-	err = c.TripService.CreateTrip(respObj, md.UserID, int64(req.CarID), int64(req.MaxDistance), userTrip.BeginLeaveTime.Unix(), userTrip.EndLeaveTime.Unix(), int64(req.PriceEachKm), totalSeat)
+	err = c.TripService.CreateTrip(respObj, md.UserID, int64(req.CarID), int64(req.MaxDistance), userTrip.BeginLeaveTime, userTrip.EndLeaveTime, int64(req.PriceEachKm), totalSeat)
 	if err != nil {
 		log.Printf("RegisterTrip - Error: %v", err)
 		return nil, err

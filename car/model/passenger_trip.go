@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"log"
-	"time"
 
 	geomdto "github.com/haupc/cartransplant/geometry/dto"
 
@@ -16,15 +15,15 @@ import (
 
 type PassengerTrip struct {
 	gorm.Model
-	UserID         string    `json:"user_id"`
-	TripID         int64     `json:"trip_id"`
-	Seat           int32     `json:"seat"`
-	Location       string    `json:"location"`
-	State          int32     `json:"state"`
-	BeginLeaveTime time.Time `json:"begin_leave_time"`
-	EndLeaveTime   time.Time `json:"end_leave_time"`
-	Price          int64     `json:"price"`
-	Type           int32     `json:"type"`
+	UserID         string `json:"user_id"`
+	TripID         int64  `json:"trip_id"`
+	Seat           int32  `json:"seat"`
+	Location       string `json:"location"`
+	State          int32  `json:"state"`
+	BeginLeaveTime int64  `json:"begin_leave_time"`
+	EndLeaveTime   int64  `json:"end_leave_time"`
+	Price          int64  `json:"price"`
+	Type           int32  `json:"type"`
 }
 
 func (p *PassengerTrip) TableName() string {
@@ -53,8 +52,8 @@ func (p *PassengerTrip) ToGrpcListUserTripResponse(driverInfro, userInfo *grpcpr
 	to := addressParsed.DisplayName
 	return &grpcproto.UserTrip{
 		Id:             int32(p.ID),
-		BeginLeaveTime: p.BeginLeaveTime.Unix(),
-		EndLeaveTime:   p.EndLeaveTime.Unix(),
+		BeginLeaveTime: p.BeginLeaveTime,
+		EndLeaveTime:   p.EndLeaveTime,
 		From:           from,
 		To:             to,
 		State:          p.State,

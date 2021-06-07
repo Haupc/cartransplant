@@ -83,7 +83,7 @@ func (n *notifyServer) PushNotify(ctx context.Context, req *grpcproto.PushNotify
 		UserID:    req.Notification.UserID,
 		Title:     req.Notification.Title,
 		Message:   req.Notification.Message,
-		CreatedAt: time.Now(),
+		CreatedAt: time.Now().Unix(),
 		Image:     req.Notification.Image,
 	}
 	if err = repository.GetNotifyRepo().SaveNotification(noti); err != nil {
