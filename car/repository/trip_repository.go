@@ -25,6 +25,7 @@ type TripRepo interface {
 	GetTakenSeatByTripID(tripID int64) int32
 	Create(model *model.Trip) error
 	FindLastTrip(model *model.Trip) (*model.Trip, error)
+	UpdateState(tripID, state int32) error
 }
 
 type tripRepo struct {
@@ -39,6 +40,10 @@ func GettripRepo() TripRepo {
 		}
 	}
 	return tripRepository
+}
+
+func (r *tripRepo) UpdateState(tripID, state int32) error {
+	return r.db.Model(&model.Trip{}).Where("id = ?", tripID).Update("state", state).Error
 }
 
 func (r *tripRepo) Create(model *model.Trip) error {

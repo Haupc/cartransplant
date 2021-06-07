@@ -125,6 +125,7 @@ service car {
     rpc listDriverTrip(listDriverTripRequest) returns (listDriverTripResponse);
     rpc findPendingTrip(findPendingTripRequest) returns (listUserTripResponse);
     rpc driverTakeTrip(driverTakeTripRequest) returns (grpcproto.bool);
+    rpc markUserTripDone(int) returns (grpcproto.bool);
     // user
     rpc findTrip(findTripRequest) returns (jsonResponse);
     rpc takeTrip(takeTripRequest) returns (grpcproto.bool);

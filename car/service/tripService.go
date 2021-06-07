@@ -42,6 +42,7 @@ type TripService interface {
 	CreateTripByUserTrip(tripModel *model.Trip) error
 	GetLastTripID(userID string, carID, maxDistance, priceEachKm, totalSeat int32) (int32, error)
 	CancelTrip(userID string, userTripID int32) error
+	MarkUserTripDone(userTripID int32) error
 }
 
 func GetTripService() TripService {
@@ -53,6 +54,31 @@ func GetTripService() TripService {
 		}
 	}
 	return _tripService
+}
+
+func (s *tripService) MarkUserTripDone(userTripID int32) error {
+	userTrip, err := s.PassengerTripRepo.FindPassengerTripByID(userTripID)
+	if err != nil {
+		log.Printf("MarkUserTripDone - userTrip not found - Error: %v", err)
+		return err
+	}
+	if userTrip.State != 2 {
+		log.Printf("MarkUserTripDone - Trip cant be marked as done")
+		return errors.New("Trip cant be marked as done")
+	}
+	userTrip.State = 3
+	err = s.PassengerTripRepo.Update(userTrip)
+	if err != nil {
+		log.Printf("MarkUserTripDone - update trip fail - Error: %v", err)
+		return err
+	}
+	if userTrip != nil {
+		remaningTrip := s.PassengerTripRepo.RemainingUserTripByTripID(int32(userTrip.TripID))
+		if remaningTrip == 0 {
+			return s.TripRepo.UpdateState(int32(userTrip.TripID), 2)
+		}
+	}
+	return nil
 }
 
 func (s *tripService) CancelTrip(userID string, userTripID int32) error {

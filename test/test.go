@@ -7,5 +7,5 @@ import (
 )
 
 func main() {
-	fmt.Println(service.GetTripService().CancelTrip("xLPrxESgCeggCEpQXlDvhfOYGyw2", 15))
+	fmt.Println(service.GetTripService().MarkUserTripDone(18))
 }

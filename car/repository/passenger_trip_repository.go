@@ -17,6 +17,7 @@ type PassengerTripRepo interface {
 	FindPendingTrip(seat, radius, tripType int32, rootPoint *grpcproto.Point) ([]model.PassengerTrip, error)
 	Update(model *model.PassengerTrip) error
 	FindPassengerTripByID(userTripID int32) (*model.PassengerTrip, error)
+	RemainingUserTripByTripID(tripID int32) int32
 }
 
 var (
@@ -35,6 +36,15 @@ func GetPassengerTripRepo() PassengerTripRepo {
 		}
 	}
 	return _passengerTripRepo
+}
+
+func (r *passengerTripRepo) RemainingUserTripByTripID(tripID int32) int32 {
+	var result int32
+	if err := r.db.Raw("select count(*) from passenger_trip where trip_id = ? and state = 2", tripID).Scan(&result).Error; err != nil {
+		log.Printf("count query - Error: %v", err)
+		return 0
+	}
+	return result
 }
 
 func (r *passengerTripRepo) FindPassengerTripByID(userTripID int32) (*model.PassengerTrip, error) {
