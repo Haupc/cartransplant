@@ -56,19 +56,13 @@ func GetTripService() TripService {
 }
 
 func (s *tripService) CancelTrip(userID string, userTripID int32) error {
-	userTripModels, err := s.PassengerTripRepo.FindUserTrip(model.PassengerTrip{
-		UserID: userID,
-		Model: gorm.Model{
-			ID: uint(userTripID),
-		},
-	})
-	if err != nil || userTripModels == nil || len(userTripModels) == 0 {
+	userTripModel, err := s.PassengerTripRepo.FindPassengerTripByID(userTripID)
+	if err != nil || userTripModel == nil || userTripModel.State > 2 {
 		log.Printf("CancelTrip - Trip not found - Error: %v", err)
 		return err
 	}
-	userTripModel := userTripModels[0]
 	userTripModel.State = base.TRIP_STATUS_CANCELLED
-	err = s.PassengerTripRepo.Update(&userTripModel)
+	err = s.PassengerTripRepo.Update(userTripModel)
 	if err != nil {
 		log.Printf("CancelTrip - update trip - Error: %v", err)
 		return err
