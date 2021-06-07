@@ -150,7 +150,7 @@ func (s *tripService) RegisterTripUser(userID string, beginLeaveTime, endLeaveTi
 		EndLeaveTime:   time.Unix(endLeaveTime, 0),
 		Price:          int64(distance) * 12,
 	}
-	err := s.PassengerTripRepo.Create(&passengerTrip)
+	err := s.PassengerTripRepo.Create(&passengerTrip, from)
 	if err != nil {
 		log.Printf("RegisterTripUser - Error: %v", err)
 		return err
@@ -294,10 +294,11 @@ func (s *tripService) FindTrip(from *grpcproto.Point, to *grpcproto.Point, begin
 }
 
 func (s *tripService) TakeTrip(userID string, driverTripID, beginLeaveTime, endLeaveTime int64, seat int32, from, to *grpcproto.Point) error {
-	locationInfo, _ := json.Marshal(trip_dto.TripLocationInfo{
+	locationInfo := trip_dto.TripLocationInfo{
 		From: from,
 		To:   to,
-	})
+	}
+	locationJson, _ := json.Marshal(locationInfo)
 	distance, _ := utils.Distance(from, to)
 	driverTrip, _ := s.TripRepo.GetTripByID(driverTripID)
 
@@ -305,13 +306,14 @@ func (s *tripService) TakeTrip(userID string, driverTripID, beginLeaveTime, endL
 		UserID:         userID,
 		TripID:         driverTripID,
 		Seat:           seat,
-		Location:       string(locationInfo),
+		Location:       string(locationJson),
 		State:          base.TRIP_STATUS_TAKEN,
 		BeginLeaveTime: time.Unix(beginLeaveTime, 0),
 		EndLeaveTime:   time.Unix(endLeaveTime, 0),
 		Price:          int64(float64(driverTrip.FeeEachKm)*distance) / 1000,
+		Type:           driverTrip.Type,
 	}
-	err := s.PassengerTripRepo.Create(passengerTripModel)
+	err := s.PassengerTripRepo.Create(passengerTripModel, from)
 	return err
 }
 

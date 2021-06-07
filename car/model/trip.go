@@ -18,6 +18,7 @@ type Trip struct {
 	FeeEachKm      int64
 	Seat           int32
 	State          int32
+	Type           int32
 }
 
 // TableName name of table

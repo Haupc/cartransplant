@@ -11,7 +11,7 @@ import (
 )
 
 type PassengerTripRepo interface {
-	Create(model *model.PassengerTrip) error
+	Create(model *model.PassengerTrip, startPoint *grpcproto.Point) error
 	FindUserTrip(model model.PassengerTrip) ([]model.PassengerTrip, error)
 	FindHistoryTrip(userID string) ([]model.PassengerTrip, error)
 	FindPendingTrip(seat, radius, tripType int32, rootPoint *grpcproto.Point) ([]model.PassengerTrip, error)
@@ -60,8 +60,10 @@ func (r *passengerTripRepo) FindPendingTrip(seat, radius, tripType int32, rootPo
 	return result, nil
 }
 
-func (r *passengerTripRepo) Create(userTripModel *model.PassengerTrip) error {
-	if err := r.db.Create(userTripModel).Error; err != nil {
+func (r *passengerTripRepo) Create(userTripModel *model.PassengerTrip, startPoint *grpcproto.Point) error {
+	start_point := makePoint(startPoint)
+	query := fmt.Sprintf("insert into passenger_trip (user_id, trip_id, seat, location, state, begin_leave_time, end_leave_time, price, start_point, type) values (?, ?, ?, ?, ?, ?, ?, ?, %s, ?)", start_point)
+	if err := r.db.Exec(query, userTripModel.UserID, userTripModel.TripID, userTripModel.Seat, userTripModel.Location, userTripModel.State, userTripModel.BeginLeaveTime, userTripModel.EndLeaveTime, userTripModel.Price, userTripModel.Type).Error; err != nil {
 		return err
 	}
 	return nil
