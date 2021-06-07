@@ -128,4 +128,5 @@ service car {
     rpc takeTrip(takeTripRequest) returns (grpcproto.bool);
     rpc listUserTrip(int) returns (listUserTripResponse);
     rpc userRegisterTrip(takeTripRequest) returns (grpcproto.bool);
+    rpc CancelTrip(int) returns (grpcproto.bool);
 }
