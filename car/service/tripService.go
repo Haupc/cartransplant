@@ -57,7 +57,7 @@ func GetTripService() TripService {
 
 func (s *tripService) CancelTrip(userID string, userTripID int32) error {
 	userTripModel, err := s.PassengerTripRepo.FindPassengerTripByID(userTripID)
-	if err != nil || userTripModel == nil || userTripModel.State > 2 {
+	if err != nil || userTripModel == nil || userTripModel.State > 2 || userTripModel.UserID != userID {
 		log.Printf("CancelTrip - Trip not found - Error: %v", err)
 		return err
 	}
