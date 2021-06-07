@@ -33,6 +33,7 @@ type CarController interface {
 	ListDriverTrip(ctx *gin.Context)
 	RegisterTripUser(ctx *gin.Context)
 	FindPendingTrip(ctx *gin.Context)
+	UserCancelTrip(ctx *gin.Context)
 }
 
 type carController struct {
@@ -46,6 +47,23 @@ func GetCarController() CarController {
 		}
 	}
 	return _carController
+}
+
+func (c *carController) UserCancelTrip(ctx *gin.Context) {
+	idString := ctx.Query("id")
+	id, err := strconv.Atoi(idString)
+	if err != nil || id < 1 {
+		respose := utils.BuildErrorResponse("Param seat invalid", err.Error(), nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	_, err = c.carClient.CancelTrip(middleware.RPCNewContextFromContext(ctx), &grpcproto.Int{Value: int64(id)})
+	if err != nil {
+		respose := utils.BuildErrorResponse("Something wrong happened", err.Error(), nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	ctx.JSON(http.StatusOK, utils.BuildResponse(true, "success", nil))
 }
 
 func (c *carController) FindPendingTrip(ctx *gin.Context) {

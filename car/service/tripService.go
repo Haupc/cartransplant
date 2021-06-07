@@ -41,6 +41,7 @@ type TripService interface {
 	GetPassengerTripByID(userTripID int32) (*model.PassengerTrip, error)
 	CreateTripByUserTrip(tripModel *model.Trip) error
 	GetLastTripID(userID string, carID, maxDistance, priceEachKm, totalSeat int32) (int32, error)
+	CancelTrip(userID string, userTripID int32) error
 }
 
 func GetTripService() TripService {
@@ -52,6 +53,27 @@ func GetTripService() TripService {
 		}
 	}
 	return _tripService
+}
+
+func (s *tripService) CancelTrip(userID string, userTripID int32) error {
+	userTripModels, err := s.PassengerTripRepo.FindUserTrip(model.PassengerTrip{
+		UserID: userID,
+		Model: gorm.Model{
+			ID: uint(userTripID),
+		},
+	})
+	if err != nil || userTripModels == nil || len(userTripModels) == 0 {
+		log.Printf("CancelTrip - Trip not found - Error: %v", err)
+		return err
+	}
+	userTripModel := userTripModels[0]
+	userTripModel.State = base.TRIP_STATUS_CANCELLED
+	err = s.PassengerTripRepo.Update(&userTripModel)
+	if err != nil {
+		log.Printf("CancelTrip - update trip - Error: %v", err)
+		return err
+	}
+	return nil
 }
 
 func (s *tripService) GetLastTripID(userID string, carID, maxDistance, priceEachKm, totalSeat int32) (int32, error) {
