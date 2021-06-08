@@ -149,7 +149,11 @@ func (s *tripService) FindPendingTrip(seat, radius, tripType int32, rootPoint *g
 			log.Printf("get user info - error: %v", err)
 		}
 
-		grpcUserTrip, _ := trip.ToGrpcListUserTripResponse(nil, userInfo, nil)
+		grpcUserTrip, locationInfo := trip.ToGrpcListUserTripResponse(nil, userInfo, nil)
+		distance, duration := utils.Distance(locationInfo.From, locationInfo.To)
+		grpcUserTrip.Distance = float32(distance / 1000.0)
+		grpcUserTrip.Duration = float32(duration)
+
 		response.UserTrip = append(response.UserTrip, grpcUserTrip)
 	}
 	return response, nil
@@ -185,6 +189,9 @@ func (s *tripService) RegisterTripUser(userID string, beginLeaveTime, endLeaveTi
 }
 
 func (s *tripService) ListDriverTrip(userID string, state, startDate, endDate int32) (*grpcproto.ListDriverTripResponse, error) {
+	if state == -1 {
+		state = 2
+	}
 	tripModels, err := s.TripRepo.GetTripByUserID(userID, state, startDate, endDate)
 	if err != nil {
 		return nil, err
@@ -201,7 +208,6 @@ func (s *tripService) ListDriverTrip(userID string, state, startDate, endDate in
 			glog.V(3).Infof("ListDriverTrip - Error: %v", err)
 			return nil, err
 		}
-
 		driverTrip := &grpcproto.DriverTrip{
 			UserTrips:      []*grpcproto.UserTrip{},
 			BeginLeaveTime: tripModel.BeginLeaveTime,
@@ -213,6 +219,7 @@ func (s *tripService) ListDriverTrip(userID string, state, startDate, endDate in
 			PriceEachKm:    int32(tripModel.FeeEachKm),
 			Car:            utils.CarModelToCarRPC(carModel),
 			State:          tripModel.State,
+			Distance:       float32(route.Routes[0].Distance / float64(1000)),
 		}
 		// TODO: usertrip, state
 		userTripModels, err := s.PassengerTripRepo.FindUserTrip(model.PassengerTrip{TripID: int64(tripModel.ID)})
@@ -368,16 +375,19 @@ func (s *tripService) ListUserTrip(userID string, state int32) (*grpcproto.ListU
 		var carRpc *grpcproto.CarObject
 		if u.State == 2 || u.State == 3 {
 			driverTrip, _ := s.TripRepo.GetTripByID(u.TripID)
-			dirverInfo, err = auth_client.GetAuthClient().GetUserInfo(context.Background(), &grpcproto.GetUserInfoRequest{UserID: u.UserID})
+			dirverInfo, err = auth_client.GetAuthClient().GetUserInfo(context.Background(), &grpcproto.GetUserInfoRequest{UserID: driverTrip.UserID})
 			if err != nil {
-				log.Printf("Error getting user info: %v", err)
+				log.Printf("Error getting dirverInfo info: %v", err)
 				return nil, err
 			}
 			carDB, _ := s.CarRepo.GetCarByID(context.Background(), int(driverTrip.CarID))
 			carRpc = utils.CarModelToCarRPC(carDB)
 		}
-
-		userTripRPC, locationInfo := u.ToGrpcListUserTripResponse(dirverInfo, nil, carRpc)
+		userInfo, err := auth_client.GetAuthClient().GetUserInfo(context.Background(), &grpcproto.GetUserInfoRequest{UserID: u.UserID})
+		if err != nil {
+			log.Printf("Error getting userInfo info: %v", err)
+		}
+		userTripRPC, locationInfo := u.ToGrpcListUserTripResponse(dirverInfo, userInfo, carRpc)
 		if userTripRPC != nil || locationInfo != nil {
 			distance, duration := utils.Distance(locationInfo.From, locationInfo.To)
 			userTripRPC.Distance = float32(distance / 1000)

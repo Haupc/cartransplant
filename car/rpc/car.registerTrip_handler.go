@@ -28,6 +28,8 @@ func (c *carServer) RegisterTrip(ctx context.Context, req *grpcproto.RegisterTri
 		log.Printf("RegisterTrip - Error: %v", err)
 		return nil, err
 	}
+	respObj.Waypoints[0].Name = base.GetLocationName(respObj.Waypoints[0].Location.ToGrpcPoint())
+	respObj.Waypoints[1].Name = base.GetLocationName(respObj.Waypoints[1].Location.ToGrpcPoint())
 
 	err = c.TripService.CreateTrip(respObj, md.UserID, req.CarID, int64(req.MaxDistance), req.BeginLeaveTime, req.EndLeaveTime, req.FeeEachKm, req.Seat)
 	if err != nil {

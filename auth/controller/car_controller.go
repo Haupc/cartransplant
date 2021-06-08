@@ -119,7 +119,7 @@ func (c *carController) FindPendingTrip(ctx *gin.Context) {
 	// 	return
 	// }
 	seat := 1
-	tripType := 1
+	tripType := 2
 	latitude := "21.0294498"
 	longitude := "105.8544441"
 	radius := 3000

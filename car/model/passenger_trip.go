@@ -1,14 +1,10 @@
 package model
 
 import (
-	"context"
 	"encoding/json"
-	"log"
 
-	geomdto "github.com/haupc/cartransplant/geometry/dto"
-
+	"github.com/haupc/cartransplant/base"
 	"github.com/haupc/cartransplant/car/dto"
-	"github.com/haupc/cartransplant/geometry/client"
 	"github.com/haupc/cartransplant/grpcproto"
 	"gorm.io/gorm"
 )
@@ -33,23 +29,8 @@ func (p *PassengerTrip) TableName() string {
 func (p *PassengerTrip) ToGrpcListUserTripResponse(driverInfro, userInfo *grpcproto.UserProfile, car *grpcproto.CarObject) (*grpcproto.UserTrip, *dto.TripLocationInfo) {
 	var locationTripInfo dto.TripLocationInfo
 	json.Unmarshal([]byte(p.Location), &locationTripInfo)
-	addressFrom, err := client.GetGeomClient().GetCurrentAddress(context.Background(), locationTripInfo.From)
-	if err != nil {
-		log.Printf("ToGrpcListUserTripResponse - GetCurrentAddress error: %v", err)
-		return nil, nil
-	}
-	var addressParsed geomdto.SearchAddressResponse
-	json.Unmarshal(addressFrom.JsonResponse, &addressParsed)
-
-	from := addressParsed.DisplayName
-
-	addressTo, err := client.GetGeomClient().GetCurrentAddress(context.Background(), locationTripInfo.To)
-	if err != nil {
-		log.Printf("ToGrpcListUserTripResponse - GetCurrentAddress error: %v", err)
-		return nil, nil
-	}
-	json.Unmarshal(addressTo.JsonResponse, &addressParsed)
-	to := addressParsed.DisplayName
+	from := base.GetLocationName(locationTripInfo.From)
+	to := base.GetLocationName(locationTripInfo.To)
 	return &grpcproto.UserTrip{
 		Id:             int32(p.ID),
 		BeginLeaveTime: p.BeginLeaveTime,

@@ -87,6 +87,7 @@ message driverTrip {
     int32 priceEachKm = 10;
     int32 totalUserTrip = 12;
     int64 totalIncome = 13;
+    float distance = 14;
 }
 
 message listDriverTripResponse {
