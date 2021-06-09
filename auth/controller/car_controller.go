@@ -35,6 +35,7 @@ type CarController interface {
 	FindPendingTrip(ctx *gin.Context)
 	UserCancelTrip(ctx *gin.Context)
 	MarkUserTripDone(ctx *gin.Context)
+	DriverTakeTrip(ctx *gin.Context)
 }
 
 type carController struct {
@@ -48,6 +49,26 @@ func GetCarController() CarController {
 		}
 	}
 	return _carController
+}
+
+func (c *carController) DriverTakeTrip(ctx *gin.Context) {
+	var takeTripRequest grpcproto.DriverTakeTripRequest
+	body, _ := ioutil.ReadAll(ctx.Request.Body)
+	log.Println("DriverTakeTrip - request: ", string(body))
+	err := json.Unmarshal(body, &takeTripRequest)
+	if err != nil {
+		log.Printf("DriverTakeTrip - Error: %v", err)
+		respose := utils.BuildErrorResponse("Request wrong format", err.Error(), body)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	_, err = c.carClient.DriverTakeTrip(middleware.RPCNewContextFromContext(ctx), &takeTripRequest)
+	if err != nil {
+		respose := utils.BuildErrorResponse("Something wrong happened", err.Error(), nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	ctx.JSON(http.StatusOK, utils.BuildResponse(true, "success", nil))
 }
 
 func (c *carController) MarkUserTripDone(ctx *gin.Context) {

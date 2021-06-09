@@ -59,6 +59,7 @@ func main() {
 		carRoutes.GET("/driver/find-pending-trip", carController.FindPendingTrip)
 		carRoutes.DELETE("/user/cancel-trip", carController.UserCancelTrip)
 		carRoutes.GET("/driver/mark-user-trip-done", carController.MarkUserTripDone)
+		carRoutes.POST("/driver/takeTrip", carController.DriverTakeTrip)
 	}
 	notifyRoute := r.Group("/noti", middleware.AuthorizeJWTFirebase())
 	{

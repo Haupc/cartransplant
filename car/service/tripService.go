@@ -30,7 +30,7 @@ type tripService struct {
 }
 
 type TripService interface {
-	CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime, priceEachKm int64, seat int32) error
+	CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance float32, beginLeaveTime, endLeaveTime, priceEachKm int64, seat int32) error
 	FindTrip(from *grpcproto.Point, to *grpcproto.Point, beginLeaveTime int64, endLeaveTime int64, tripType, seat int32) ([]trip_dto.FindTripResponse, error)
 	TakeTrip(userID string, driverTripID, beginLeaveTime, endLeaveTime int64, seat int32, from, to *grpcproto.Point) error
 	ListUserTrip(userID string, state int32) (*grpcproto.ListUserTripResponse, error)
@@ -40,7 +40,7 @@ type TripService interface {
 	UpdateUserTrip(driverTripID, userTripID, userTripPrice int32) error
 	GetPassengerTripByID(userTripID int32) (*model.PassengerTrip, error)
 	CreateTripByUserTrip(tripModel *model.Trip) error
-	GetLastTripID(userID string, carID, maxDistance, priceEachKm, totalSeat int32) (int32, error)
+	GetLastTripID(userID string, carID int32, maxDistance float32, priceEachKm, totalSeat int32) (int32, error)
 	CancelTrip(userID string, userTripID int32) error
 	MarkUserTripDone(userTripID int32) error
 }
@@ -96,7 +96,7 @@ func (s *tripService) CancelTrip(userID string, userTripID int32) error {
 	return nil
 }
 
-func (s *tripService) GetLastTripID(userID string, carID, maxDistance, priceEachKm, totalSeat int32) (int32, error) {
+func (s *tripService) GetLastTripID(userID string, carID int32, maxDistance float32, priceEachKm, totalSeat int32) (int32, error) {
 	tripModel := &model.Trip{
 		UserID:      userID,
 		CarID:       int64(carID),
@@ -250,7 +250,7 @@ func (s *tripService) ListDriverTrip(userID string, state, startDate, endDate in
 	return response, nil
 }
 
-func (s *tripService) CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance int64, beginLeaveTime, endLeaveTime, priceEachKm int64, seat int32) error {
+func (s *tripService) CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance float32, beginLeaveTime, endLeaveTime, priceEachKm int64, seat int32) error {
 	if beginLeaveTime < time.Now().Unix() {
 		beginLeaveTime = time.Now().Unix()
 	}

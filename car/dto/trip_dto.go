@@ -10,7 +10,7 @@ type RegisterTripRequest struct {
 	EndLeaveTime   int64               `json:"end_leave_time"`
 	From           greometry_dto.Point `json:"from"`
 	To             greometry_dto.Point `json:"to"`
-	MaxDistance    int32               `json:"max_distance"`
+	MaxDistance    float32             `json:"max_distance"`
 	CarID          int64               `json:"car_id"`
 	FeeEachKm      int64               `json:"fee_each_km"`
 	Seat           int64               `json:"seat"`

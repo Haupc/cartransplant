@@ -12,7 +12,7 @@ message registerTripRequest {
     int64 endLeaveTime = 3;
     point from = 4;
     point to = 5;
-    int32 maxDistance = 6;
+    float maxDistance = 6;
     int64 feeEachKm = 7;
     int32 seat = 8;
 }
@@ -112,7 +112,7 @@ message driverTakeTripRequest {
     int32 priceEachKm = 2;
     int32 userTripID = 3;
     int32 userTripPrice = 4;
-    int32 maxDistance = 5;
+    float maxDistance = 5;
     int32 carID = 6;
 }
 

@@ -12,7 +12,7 @@ type Trip struct {
 	BeginLeaveTime int64
 	EndLeaveTime   int64
 	CarID          int64
-	MaxDistance    int32
+	MaxDistance    float32
 	FeeEachKm      int64
 	Seat           int32
 	State          int32
