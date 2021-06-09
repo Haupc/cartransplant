@@ -1,4 +1,5 @@
 syntax = "proto3";
+import "common.proto";
 
 package grpcproto;
 
@@ -23,10 +24,18 @@ message UserToken {
     string Token = 2;
 }
 
+message RegisterTokenToTopicRequest {
+    string topic = 1;
+    string userID = 2;
+}
+
 service notify {
     rpc getNotify (getNotifyRequest) returns (getNotifyResponse);
     rpc AddUserToken(AddUserTokenReq) returns (AddUserTokenResp);
     rpc PushNotify(PushNotifyReq) returns(PushNotifyResp);
+    rpc RegisterTokenToTopic(RegisterTokenToTopicRequest) returns (grpcproto.bool);
+    rpc UnRegisterTokenToTopic(RegisterTokenToTopicRequest) returns (grpcproto.bool);
+
 }
 
 message AddUserTokenReq {

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang/protobuf/ptypes/empty"
 	auth_dto "github.com/haupc/cartransplant/auth/dto"
 	"github.com/haupc/cartransplant/auth/middleware"
 	"github.com/haupc/cartransplant/auth/utils"
@@ -36,6 +37,8 @@ type CarController interface {
 	UserCancelTrip(ctx *gin.Context)
 	MarkUserTripDone(ctx *gin.Context)
 	DriverTakeTrip(ctx *gin.Context)
+	RegisterActiveZone(ctx *gin.Context)
+	ListActiveZone(ctx *gin.Context)
 }
 
 type carController struct {
@@ -49,6 +52,36 @@ func GetCarController() CarController {
 		}
 	}
 	return _carController
+}
+
+func (c *carController) RegisterActiveZone(ctx *gin.Context) {
+	var activeZones grpcproto.ActiveZone
+	body, _ := ioutil.ReadAll(ctx.Request.Body)
+	log.Println("RegisterActiveZone - request: ", string(body))
+	err := json.Unmarshal(body, &activeZones)
+	if err != nil {
+		log.Printf("RegisterActiveZone - Error: %v", err)
+		respose := utils.BuildErrorResponse("Request wrong format", err.Error(), body)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	_, err = c.carClient.RegisterActiveZone(middleware.RPCNewContextFromContext(ctx), &activeZones)
+	if err != nil {
+		respose := utils.BuildErrorResponse("Something wrong happened", err.Error(), nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	ctx.JSON(http.StatusOK, utils.BuildResponse(true, "success", nil))
+}
+
+func (c *carController) ListActiveZone(ctx *gin.Context) {
+	activeZones, err := c.carClient.ListActiveZone(middleware.RPCNewContextFromContext(ctx), &empty.Empty{})
+	if err != nil {
+		respose := utils.BuildErrorResponse("Something wrong happened", err.Error(), nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
+	}
+	ctx.JSON(http.StatusOK, utils.BuildResponse(true, "success", activeZones.Provinces))
 }
 
 func (c *carController) DriverTakeTrip(ctx *gin.Context) {

@@ -16,6 +16,7 @@ import (
 	"github.com/haupc/cartransplant/car/utils"
 	"github.com/haupc/cartransplant/geometry/client"
 	"github.com/haupc/cartransplant/geometry/dto"
+	notify_client "github.com/haupc/cartransplant/notify/client"
 	"gorm.io/gorm"
 
 	"github.com/haupc/cartransplant/grpcproto"
@@ -24,18 +25,20 @@ import (
 var _tripService *tripService
 
 type tripService struct {
-	TripRepo          repository.TripRepo
-	CarRepo           repository.CarRepo
-	PassengerTripRepo repository.PassengerTripRepo
+	TripRepo           repository.TripRepo
+	CarRepo            repository.CarRepo
+	PassengerTripRepo  repository.PassengerTripRepo
+	DriverProvinceRepo repository.DriverProvinceRepo
+	ProvinceRepo       repository.ProvinceRepo
 }
 
 type TripService interface {
 	CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance float32, beginLeaveTime, endLeaveTime, priceEachKm int64, seat int32) error
 	FindTrip(from *grpcproto.Point, to *grpcproto.Point, beginLeaveTime int64, endLeaveTime int64, tripType, seat int32) ([]trip_dto.FindTripResponse, error)
-	TakeTrip(userID string, driverTripID, beginLeaveTime, endLeaveTime int64, seat int32, from, to *grpcproto.Point) error
+	TakeTrip(userID string, driverTripID, beginLeaveTime, endLeaveTime int64, seat int32, from, to *grpcproto.Point, note string) error
 	ListUserTrip(userID string, state int32) (*grpcproto.ListUserTripResponse, error)
 	ListDriverTrip(userID string, state, startDate, endDate int32) (*grpcproto.ListDriverTripResponse, error)
-	RegisterTripUser(userID string, beginLeaveTime, endLeaveTime int64, from, to *grpcproto.Point, seat, tripType int32) error
+	RegisterTripUser(userID string, beginLeaveTime, endLeaveTime int64, from, to *grpcproto.Point, seat, tripType int32, note string) error
 	FindPendingTrip(seat, radius, tripType int32, rootPoint *grpcproto.Point) (*grpcproto.ListUserTripResponse, error)
 	UpdateUserTrip(driverTripID, userTripID, userTripPrice int32) error
 	GetPassengerTripByID(userTripID int32) (*model.PassengerTrip, error)
@@ -43,17 +46,53 @@ type TripService interface {
 	GetLastTripID(userID string, carID int32, maxDistance float32, priceEachKm, totalSeat int32) (int32, error)
 	CancelTrip(userID string, userTripID int32) error
 	MarkUserTripDone(userTripID int32) error
+	RegisterActiveZone(userID string, activeZone []int32) error
+	UnRegisterActiveZone(userID string, activeZone []int32) error
+	ListActiveZone(userID string) ([]int32, error)
 }
 
 func GetTripService() TripService {
 	if _tripService == nil {
 		_tripService = &tripService{
-			TripRepo:          repository.GettripRepo(),
-			CarRepo:           repository.GetCarRepo(),
-			PassengerTripRepo: repository.GetPassengerTripRepo(),
+			TripRepo:           repository.GettripRepo(),
+			CarRepo:            repository.GetCarRepo(),
+			PassengerTripRepo:  repository.GetPassengerTripRepo(),
+			DriverProvinceRepo: repository.GetDriverProvinceRepo(),
+			ProvinceRepo:       repository.GetProvinceRepo(),
 		}
 	}
 	return _tripService
+}
+
+func (s *tripService) ListActiveZone(userID string) ([]int32, error) {
+	return s.DriverProvinceRepo.SelectAllProvinceByDriverID(userID)
+}
+
+func (s *tripService) UnRegisterActiveZone(userID string, activeZone []int32) error {
+	provinces := s.ProvinceRepo.GetProvinceByIDList(activeZone)
+	for _, p := range provinces {
+		_, err := notify_client.GetNotifyClient().UnRegisterTokenToTopic(context.Background(), &grpcproto.RegisterTokenToTopicRequest{Topic: p.Topic, UserID: userID})
+		if err != nil {
+			log.Printf("RegisterActiveZone - Error: %v", err)
+		}
+	}
+	return s.DriverProvinceRepo.BatchDelete(userID, activeZone)
+}
+
+func (s *tripService) RegisterActiveZone(userID string, activeZone []int32) error {
+	listDriverProvince := []model.DriverProvince{}
+	for _, zone := range activeZone {
+		listDriverProvince = append(listDriverProvince, model.DriverProvince{DriverID: userID, ProvinceID: zone})
+	}
+
+	provinces := s.ProvinceRepo.GetProvinceByIDList(activeZone)
+	for _, p := range provinces {
+		_, err := notify_client.GetNotifyClient().RegisterTokenToTopic(context.Background(), &grpcproto.RegisterTokenToTopicRequest{Topic: p.Topic, UserID: userID})
+		if err != nil {
+			log.Printf("RegisterActiveZone - Error: %v", err)
+		}
+	}
+	return s.DriverProvinceRepo.BatchCreate(listDriverProvince)
 }
 
 func (s *tripService) MarkUserTripDone(userTripID int32) error {
@@ -159,7 +198,7 @@ func (s *tripService) FindPendingTrip(seat, radius, tripType int32, rootPoint *g
 	return response, nil
 }
 
-func (s *tripService) RegisterTripUser(userID string, beginLeaveTime, endLeaveTime int64, from, to *grpcproto.Point, seat, tripType int32) error {
+func (s *tripService) RegisterTripUser(userID string, beginLeaveTime, endLeaveTime int64, from, to *grpcproto.Point, seat, tripType int32, note string) error {
 	if beginLeaveTime < time.Now().Unix() {
 		beginLeaveTime = time.Now().Unix()
 	}
@@ -179,6 +218,7 @@ func (s *tripService) RegisterTripUser(userID string, beginLeaveTime, endLeaveTi
 		BeginLeaveTime: beginLeaveTime,
 		EndLeaveTime:   endLeaveTime,
 		Price:          int64(distance) * 12,
+		Note:           note,
 	}
 	err := s.PassengerTripRepo.Create(&passengerTrip, from)
 	if err != nil {
@@ -324,7 +364,7 @@ func (s *tripService) FindTrip(from *grpcproto.Point, to *grpcproto.Point, begin
 	return result, nil
 }
 
-func (s *tripService) TakeTrip(userID string, driverTripID, beginLeaveTime, endLeaveTime int64, seat int32, from, to *grpcproto.Point) error {
+func (s *tripService) TakeTrip(userID string, driverTripID, beginLeaveTime, endLeaveTime int64, seat int32, from, to *grpcproto.Point, note string) error {
 	locationInfo := trip_dto.TripLocationInfo{
 		From: from,
 		To:   to,
@@ -343,6 +383,7 @@ func (s *tripService) TakeTrip(userID string, driverTripID, beginLeaveTime, endL
 		EndLeaveTime:   endLeaveTime,
 		Price:          int64(float64(driverTrip.FeeEachKm)*distance) / 1000,
 		Type:           driverTrip.Type,
+		Note:           note,
 	}
 	err := s.PassengerTripRepo.Create(passengerTripModel, from)
 	return err

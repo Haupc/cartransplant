@@ -10,7 +10,7 @@ import (
 
 func (c *carServer) TakeTrip(ctx context.Context, req *grpcproto.TakeTripRequest) (*grpcproto.Bool, error) {
 	md := base.RPCMetadataFromIncoming(ctx)
-	err := c.TripService.TakeTrip(md.UserID, int64(req.DriverTripID), req.BeginLeaveTime, req.EndLeaveTime, req.Seat, req.From, req.To)
+	err := c.TripService.TakeTrip(md.UserID, int64(req.DriverTripID), req.BeginLeaveTime, req.EndLeaveTime, req.Seat, req.From, req.To, req.Note)
 	if err != nil {
 		log.Printf("TakeTrip - Error: %v", err)
 		return &grpcproto.Bool{Value: false}, err

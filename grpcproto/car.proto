@@ -5,6 +5,7 @@ package grpcproto;
 import "geometry.proto";
 import "common.proto";
 import "metadata.proto";
+import "google/protobuf/empty.proto";
 
 message registerTripRequest {
     int64 carID = 1;
@@ -47,6 +48,7 @@ message takeTripRequest {
     point to = 5;
     int32 seat = 6;
     int32 type = 7;
+    string note = 8;
 }
 
 message userTrip {
@@ -64,6 +66,7 @@ message userTrip {
     float duration = 12;
     int32 type = 13;
     int32 seat = 14;
+    string note = 15;
 }
 
 message listUserTripResponse {
@@ -116,6 +119,10 @@ message driverTakeTripRequest {
     int32 carID = 6;
 }
 
+message activeZone {
+    repeated int32 provinces = 1;
+}
+
 service car {
     // driver
     rpc registerTrip(registerTripRequest) returns (grpcproto.bool);
@@ -127,6 +134,8 @@ service car {
     rpc findPendingTrip(findPendingTripRequest) returns (listUserTripResponse);
     rpc driverTakeTrip(driverTakeTripRequest) returns (grpcproto.bool);
     rpc markUserTripDone(int) returns (grpcproto.bool);
+    rpc RegisterActiveZone (activeZone) returns (grpcproto.bool);
+    rpc ListActiveZone(google.protobuf.Empty) returns (activeZone);
     // user
     rpc findTrip(findTripRequest) returns (jsonResponse);
     rpc takeTrip(takeTripRequest) returns (grpcproto.bool);

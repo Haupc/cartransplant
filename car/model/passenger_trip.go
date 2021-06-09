@@ -20,6 +20,7 @@ type PassengerTrip struct {
 	EndLeaveTime   int64  `json:"end_leave_time"`
 	Price          int64  `json:"price"`
 	Type           int32  `json:"type"`
+	Note           string `json:"note"`
 }
 
 func (p *PassengerTrip) TableName() string {
@@ -44,6 +45,7 @@ func (p *PassengerTrip) ToGrpcListUserTripResponse(driverInfro, userInfo *grpcpr
 		Price:          p.Price,
 		Type:           p.Type,
 		Seat:           p.Seat,
+		Note:           p.Note,
 		// Distance:       float32(distance),
 	}, &locationTripInfo
 }

@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 
-	"github.com/haupc/cartransplant/car/service"
+	"github.com/haupc/cartransplant/car/repository"
 )
 
 func main() {
-	fmt.Println(service.GetTripService().MarkUserTripDone(18))
+	fmt.Println(repository.GetDriverProvinceRepo().BatchDelete("13w", []int32{1, 13}))
 }
