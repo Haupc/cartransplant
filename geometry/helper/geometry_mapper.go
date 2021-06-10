@@ -24,15 +24,20 @@ func RouteResponseToDTO(response *dto.RouteResponse) dto.RoutingDTO {
 				steps = append(steps, IntersectionToStepDTO(i, step.Name))
 			}
 		}
+		distance := roundDistance(float32(route.Distance))
 		result.Routes = append(result.Routes, dto.RouteDTO{
 			Steps:    steps,
-			Distance: route.Distance,
+			Distance: distance,
 			Duration: route.Duration,
-			Price:    int64(route.Distance) * 12,
+			Price:    int64(12000 * distance),
 		})
 	}
 	return result
 
+}
+
+func roundDistance(distance float32) float64 {
+	return float64(int32(distance/100.0)) / 10
 }
 
 func LocationToPointDTO(location []float64) dto.Point {

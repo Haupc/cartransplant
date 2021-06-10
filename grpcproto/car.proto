@@ -103,11 +103,11 @@ message listDriverTripRequest {
     int32 endDate = 3;
 }
 message findPendingTripRequest {
-    int32 seat = 1;
+    int32 date = 1;
     int32 type = 2;
-    string latitude = 3;
-    string longitude = 4;
-    float radius = 5;
+    int32 seat = 3;
+    int32 from = 4;
+    int32 to = 5;
 }
 
 message driverTakeTripRequest {

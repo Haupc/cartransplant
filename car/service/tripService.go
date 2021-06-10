@@ -190,7 +190,7 @@ func (s *tripService) FindPendingTrip(seat, radius, tripType int32, rootPoint *g
 
 		grpcUserTrip, locationInfo := trip.ToGrpcListUserTripResponse(nil, userInfo, nil)
 		distance, duration := utils.Distance(locationInfo.From, locationInfo.To)
-		grpcUserTrip.Distance = float32(distance / 1000.0)
+		grpcUserTrip.Distance = float32(distance)
 		grpcUserTrip.Duration = float32(duration)
 
 		response.UserTrip = append(response.UserTrip, grpcUserTrip)
@@ -217,8 +217,9 @@ func (s *tripService) RegisterTripUser(userID string, beginLeaveTime, endLeaveTi
 		State:          1,
 		BeginLeaveTime: beginLeaveTime,
 		EndLeaveTime:   endLeaveTime,
-		Price:          int64(distance) * 12,
-		Note:           note,
+		Price:          int64(distance * 12000),
+		Note:           note + " ",
+		Type:           tripType,
 	}
 	err := s.PassengerTripRepo.Create(&passengerTrip, from)
 	if err != nil {
@@ -355,7 +356,7 @@ func (s *tripService) FindTrip(from *grpcproto.Point, to *grpcproto.Point, begin
 				Car:            utils.CarModelToCarRPC(carModel),
 				BeginLeaveTime: m.BeginLeaveTime,
 				EndLeaveTime:   m.EndLeaveTime,
-				Price:          int64(float64(m.FeeEachKm)*distance) / 1000,
+				Price:          int64(distance * float64(m.FeeEachKm)),
 				Distance:       distance,
 				RemainingSeat:  remainingSeat,
 			})
@@ -383,7 +384,7 @@ func (s *tripService) TakeTrip(userID string, driverTripID, beginLeaveTime, endL
 		EndLeaveTime:   endLeaveTime,
 		Price:          int64(float64(driverTrip.FeeEachKm)*distance) / 1000,
 		Type:           driverTrip.Type,
-		Note:           note,
+		Note:           note + " ",
 	}
 	err := s.PassengerTripRepo.Create(passengerTripModel, from)
 	return err

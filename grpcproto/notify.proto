@@ -9,6 +9,7 @@ message notifyMessage {
     string title = 3;
     string message = 4;
     string image = 5;
+    string topic = 6;
 }
 message getNotifyResponse {
     repeated notifyMessage notifications = 1;

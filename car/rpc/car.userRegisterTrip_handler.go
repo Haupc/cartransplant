@@ -15,5 +15,6 @@ func (c *carServer) UserRegisterTrip(ctx context.Context, req *grpcproto.TakeTri
 		log.Printf("UserRegisterTripHandler - Error: %v", err)
 		return &grpcproto.Bool{Value: false}, err
 	}
+	c.NotifyService.NotifyNewTrip(req.From)
 	return &grpcproto.Bool{Value: true}, nil
 }

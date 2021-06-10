@@ -172,7 +172,7 @@ func (c *carController) FindPendingTrip(ctx *gin.Context) {
 	// 	ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
 	// 	return
 	// }
-	seat := 1
+	seat := 5
 	tripType := 2
 	latitude := "21.0294498"
 	longitude := "105.8544441"

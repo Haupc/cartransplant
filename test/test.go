@@ -2,10 +2,9 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/haupc/cartransplant/car/repository"
 )
 
 func main() {
-	fmt.Println(repository.GetDriverProvinceRepo().BatchDelete("13w", []int32{1, 13}))
+	distance := 156796.3
+	fmt.Println(float32(int32(distance/100.0)) / 10)
 }
