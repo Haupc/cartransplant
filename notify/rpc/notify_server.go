@@ -90,35 +90,20 @@ func (n *notifyServer) PushNotify(ctx context.Context, req *grpcproto.PushNotify
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	if req.Notification.Topic == "" {
-		// get all token
-		tokens := n.userTokenRepo.GetAllTokenByUserID(md.UserID)
-		msg := &messaging.MulticastMessage{
-			Tokens: tokens,
-			Notification: &messaging.Notification{
-				Body:     req.Notification.Message,
-				Title:    req.Notification.Title,
-				ImageURL: req.Notification.Image,
-			},
-		}
-		// send message
-		_, err = n.fcmClient.SendMulticast(ctx, msg)
-		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
-		}
-	} else {
-		msg := &messaging.Message{
-			Notification: &messaging.Notification{
-				Body:     req.Notification.Message,
-				Title:    req.Notification.Title,
-				ImageURL: req.Notification.Image,
-			},
-			Topic: req.Notification.Topic,
-		}
-		_, err = n.fcmClient.Send(ctx, msg)
-		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
-		}
+	// get all token
+	tokens := n.userTokenRepo.GetAllTokenByUserID(md.UserID)
+	msg := &messaging.MulticastMessage{
+		Tokens: tokens,
+		Notification: &messaging.Notification{
+			Body:     req.Notification.Message,
+			Title:    req.Notification.Title,
+			ImageURL: req.Notification.Image,
+		},
+	}
+	// send message
+	_, err = n.fcmClient.SendMulticast(ctx, msg)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &grpcproto.PushNotifyResp{Code: 1}, nil
