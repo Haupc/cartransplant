@@ -131,6 +131,7 @@ func (s *tripService) CancelTrip(userID string, userTripID int32) error {
 		log.Printf("CancelTrip - update trip - Error: %v", err)
 		return err
 	}
+	GetNotifyService().NotifyUserCancelTrip(userTripID)
 	return nil
 }
 

@@ -24,9 +24,11 @@ func (c *carServer) DriverTakeTrip(ctx context.Context, req *grpcproto.DriverTak
 		log.Printf("DriverTakeTrip - Error: %v", err)
 		return nil, err
 	}
-	resp, err := client.GetGeomClient().GetRouting(ctx, &routeReq)
+	resp, _ := client.GetGeomClient().GetRouting(ctx, &routeReq)
 	var respObj dto.RoutingDTO
 	err = json.Unmarshal(resp.JsonResponse, &respObj)
+	respObj.Waypoints[0].Name = base.GetLocationName(respObj.Waypoints[0].Location.ToGrpcPoint())
+	respObj.Waypoints[1].Name = base.GetLocationName(respObj.Waypoints[1].Location.ToGrpcPoint())
 	if err != nil {
 		log.Printf("DriverTakeTrip - Error: %v", err)
 		return nil, err
