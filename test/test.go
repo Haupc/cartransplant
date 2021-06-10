@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+
+	"github.com/haupc/cartransplant/car/repository"
 )
 
 func main() {
-	distance := 156796.3
-	fmt.Println(float32(int32(distance/100.0)) / 10)
+	result, err := repository.GetPassengerTripRepo().FindPendingTrip(182, 0, 0, 10, 0)
+	fmt.Println(result, err)
 }

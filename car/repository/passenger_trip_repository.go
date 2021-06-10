@@ -3,6 +3,7 @@ package repository
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/haupc/cartransplant/auth/config"
 	"github.com/haupc/cartransplant/car/model"
@@ -11,10 +12,10 @@ import (
 )
 
 type PassengerTripRepo interface {
-	Create(model *model.PassengerTrip, startPoint *grpcproto.Point) error
+	Create(model *model.PassengerTrip, startPoint, endPoint *grpcproto.Point) error
 	FindUserTrip(model model.PassengerTrip) ([]model.PassengerTrip, error)
 	FindHistoryTrip(userID string) ([]model.PassengerTrip, error)
-	FindPendingTrip(seat, radius, tripType int32, rootPoint *grpcproto.Point) ([]model.PassengerTrip, error)
+	FindPendingTrip(from, to, date, seat, tripType int32) ([]model.PassengerTrip, error)
 	Update(model *model.PassengerTrip) error
 	FindPassengerTripByID(userTripID int32) (*model.PassengerTrip, error)
 	RemainingUserTripByTripID(tripID int32) int32
@@ -60,19 +61,46 @@ func (r *passengerTripRepo) Update(passengerTrip *model.PassengerTrip) error {
 	return r.db.Save(passengerTrip).Error
 }
 
-func (r *passengerTripRepo) FindPendingTrip(seat, radius, tripType int32, rootPoint *grpcproto.Point) ([]model.PassengerTrip, error) {
-	postgisPoint := makePoint(rootPoint)
-	query := fmt.Sprintf("select * from passenger_trip where st_distance(%s, start_point) <= ? and seat <= ? and type = ? and state = 1", postgisPoint)
+func (r *passengerTripRepo) FindPendingTrip(from, to, date, seat, tripType int32) ([]model.PassengerTrip, error) {
 	var result []model.PassengerTrip
-	if err := r.db.Raw(query, radius, seat, tripType).Find(&result).Error; err != nil {
-		log.Printf("FindPendingTrip - Error: %v", err)
+	now := time.Now().Unix()
+	if date < int32(now) {
+		date = int32(now - now%86400)
 	}
+	startDate := date
+	endDate := time.Unix(int64(date), 0).AddDate(0, 0, 1).Unix()
+
+	query := r.db.Model(&model.PassengerTrip{}).Where("state = ? and (begin_leave_time between ? and ? or end_leave_time between ? and ?) ", 1, startDate, endDate, startDate, endDate)
+	if seat > 0 {
+		query = query.Where("seat <= ?", seat)
+	}
+
+	if tripType > 0 {
+		query = query.Where("type = ?", tripType)
+	}
+
+	if from > 0 {
+		subquery := r.db.Model(&model.Province{}).Select("way").Where("id = ?", from)
+		query = query.Where("st_contains((?) , start_point)", subquery)
+	}
+
+	if to > 0 {
+		subquery := r.db.Model(&model.Province{}).Select("way").Where("id = ?", to)
+		query = query.Where("st_contains((?) , end_point)", subquery)
+	}
+
+	if err := query.Find(&result).Error; err != nil {
+		log.Printf("FindPassengerTripByID query - Error: %v", err)
+		return nil, err
+	}
+
 	return result, nil
 }
 
-func (r *passengerTripRepo) Create(userTripModel *model.PassengerTrip, startPoint *grpcproto.Point) error {
+func (r *passengerTripRepo) Create(userTripModel *model.PassengerTrip, startPoint, endPoint *grpcproto.Point) error {
 	start_point := makePoint(startPoint)
-	query := fmt.Sprintf("insert into passenger_trip (user_id, trip_id, seat, location, state, begin_leave_time, end_leave_time, price, start_point, type, note) values (?, ?, ?, ?, ?, ?, ?, ?, %s, ?, ?)", start_point)
+	end_point := makePoint(endPoint)
+	query := fmt.Sprintf("insert into passenger_trip (user_id, trip_id, seat, location, state, begin_leave_time, end_leave_time, price, start_point, end_point, type, note) values (?, ?, ?, ?, ?, ?, ?, ?, %s, %s, ?, ?)", start_point, end_point)
 	if err := r.db.Exec(query, userTripModel.UserID, userTripModel.TripID, userTripModel.Seat, userTripModel.Location, userTripModel.State, userTripModel.BeginLeaveTime, userTripModel.EndLeaveTime, userTripModel.Price, userTripModel.Type, userTripModel.Note).Error; err != nil {
 		return err
 	}

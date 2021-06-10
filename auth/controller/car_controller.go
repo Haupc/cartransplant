@@ -139,52 +139,17 @@ func (c *carController) UserCancelTrip(ctx *gin.Context) {
 }
 
 func (c *carController) FindPendingTrip(ctx *gin.Context) {
-	// seatString := ctx.Query("seat")
-	// seat, err := strconv.Atoi(seatString)
-	// if err != nil || seat < 0 {
-	// 	respose := utils.BuildErrorResponse("Param seat invalid", err.Error(), nil)
-	// 	ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
-	// 	return
-	// }
-	// typeString := ctx.Query("type")
-	// tripType, err := strconv.Atoi(typeString)
-	// if err != nil || tripType < 1 {
-	// 	respose := utils.BuildErrorResponse("Param type invalid", err.Error(), nil)
-	// 	ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
-	// 	return
-	// }
-	// radiusString := ctx.Query("radius")
-	// radius, err := strconv.ParseFloat(radiusString, 64)
-	// if err != nil || radius < 1 {
-	// 	respose := utils.BuildErrorResponse("Param radius invalid", err.Error(), nil)
-	// 	ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
-	// 	return
-	// }
-	// latitude := ctx.Query("lat")
-	// if latitude == "" {
-	// 	respose := utils.BuildErrorResponse("Param lat invalid", err.Error(), nil)
-	// 	ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
-	// 	return
-	// }
-	// longitude := ctx.Query("long")
-	// if longitude == "" {
-	// 	respose := utils.BuildErrorResponse("Param long invalid", err.Error(), nil)
-	// 	ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
-	// 	return
-	// }
-	seat := 5
-	tripType := 2
-	latitude := "21.0294498"
-	longitude := "105.8544441"
-	radius := 3000
-	request := &grpcproto.FindPendingTripRequest{
-		Seat:      int32(seat),
-		Type:      int32(tripType),
-		Latitude:  latitude,
-		Longitude: longitude,
-		Radius:    float32(radius * 1000),
+	var findPendingTripRequest grpcproto.FindPendingTripRequest
+	body, _ := ioutil.ReadAll(ctx.Request.Body)
+	log.Println("FindPendingTrip - request: ", string(body))
+	err := json.Unmarshal(body, &findPendingTripRequest)
+	if err != nil {
+		log.Printf("FindPendingTrip - Error: %v", err)
+		respose := utils.BuildErrorResponse("Request wrong format", err.Error(), body)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)
+		return
 	}
-	response, err := c.carClient.FindPendingTrip(context.Background(), request)
+	response, err := c.carClient.FindPendingTrip(context.Background(), &findPendingTripRequest)
 	if err != nil {
 		respose := utils.BuildErrorResponse("Something wrong happened", err.Error(), nil)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, respose)

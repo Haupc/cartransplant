@@ -39,7 +39,7 @@ type TripService interface {
 	ListUserTrip(userID string, state int32) (*grpcproto.ListUserTripResponse, error)
 	ListDriverTrip(userID string, state, startDate, endDate int32) (*grpcproto.ListDriverTripResponse, error)
 	RegisterTripUser(userID string, beginLeaveTime, endLeaveTime int64, from, to *grpcproto.Point, seat, tripType int32, note string) error
-	FindPendingTrip(seat, radius, tripType int32, rootPoint *grpcproto.Point) (*grpcproto.ListUserTripResponse, error)
+	FindPendingTrip(from, to, date, seat, tripType int32) (*grpcproto.ListUserTripResponse, error)
 	UpdateUserTrip(driverTripID, userTripID, userTripPrice int32) error
 	GetPassengerTripByID(userTripID int32) (*model.PassengerTrip, error)
 	CreateTripByUserTrip(tripModel *model.Trip) error
@@ -174,8 +174,8 @@ func (s *tripService) UpdateUserTrip(driverTripID, userTripID, userTripPrice int
 	return nil
 }
 
-func (s *tripService) FindPendingTrip(seat, radius, tripType int32, rootPoint *grpcproto.Point) (*grpcproto.ListUserTripResponse, error) {
-	passengerTrips, err := s.PassengerTripRepo.FindPendingTrip(seat, radius, tripType, rootPoint)
+func (s *tripService) FindPendingTrip(from, to, date, seat, tripType int32) (*grpcproto.ListUserTripResponse, error) {
+	passengerTrips, err := s.PassengerTripRepo.FindPendingTrip(from, to, date, seat, tripType)
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +221,7 @@ func (s *tripService) RegisterTripUser(userID string, beginLeaveTime, endLeaveTi
 		Note:           note + " ",
 		Type:           tripType,
 	}
-	err := s.PassengerTripRepo.Create(&passengerTrip, from)
+	err := s.PassengerTripRepo.Create(&passengerTrip, from, to)
 	if err != nil {
 		log.Printf("RegisterTripUser - Error: %v", err)
 		return err
@@ -386,7 +386,7 @@ func (s *tripService) TakeTrip(userID string, driverTripID, beginLeaveTime, endL
 		Type:           driverTrip.Type,
 		Note:           note + " ",
 	}
-	err := s.PassengerTripRepo.Create(passengerTripModel, from)
+	err := s.PassengerTripRepo.Create(passengerTripModel, from, to)
 	return err
 }
 
