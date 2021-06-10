@@ -8,17 +8,20 @@ import (
 	"github.com/golang/glog"
 	"github.com/haupc/cartransplant/auth/config"
 	"github.com/haupc/cartransplant/base"
+	car_repo "github.com/haupc/cartransplant/car/repository"
 	"github.com/haupc/cartransplant/grpcproto"
 	"github.com/haupc/cartransplant/notify/model"
 	"github.com/haupc/cartransplant/notify/repository"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type notifyServer struct {
-	fcmClient     *messaging.Client
-	notifyRepo    repository.NotifyRepo
-	userTokenRepo repository.UserTokenRepo
+	fcmClient          *messaging.Client
+	notifyRepo         repository.NotifyRepo
+	userTokenRepo      repository.UserTokenRepo
+	driverProvinceRepo car_repo.DriverProvinceRepo
 }
 
 var _notifyServer *notifyServer
@@ -26,9 +29,10 @@ var _notifyServer *notifyServer
 func NewNotifyServer() *notifyServer {
 	if _notifyServer == nil {
 		_notifyServer = &notifyServer{
-			fcmClient:     config.GetFcmClient(),
-			notifyRepo:    repository.GetNotifyRepo(),
-			userTokenRepo: repository.GetUserTokenRepo(),
+			fcmClient:          config.GetFcmClient(),
+			notifyRepo:         repository.GetNotifyRepo(),
+			userTokenRepo:      repository.GetUserTokenRepo(),
+			driverProvinceRepo: car_repo.GetDriverProvinceRepo(),
 		}
 	}
 	return _notifyServer
@@ -73,7 +77,6 @@ func (n *notifyServer) AddUserToken(ctx context.Context, req *grpcproto.AddUserT
 // PushNotify save notify to db, query user tokens & push to firebase
 func (n *notifyServer) PushNotify(ctx context.Context, req *grpcproto.PushNotifyReq) (resp *grpcproto.PushNotifyResp, err error) {
 	// pre-exec check
-	md := base.RPCMetadataFromIncoming(ctx)
 	if req == nil || req.Notification == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -91,7 +94,7 @@ func (n *notifyServer) PushNotify(ctx context.Context, req *grpcproto.PushNotify
 	}
 
 	// get all token
-	tokens := n.userTokenRepo.GetAllTokenByUserID(md.UserID)
+	tokens := n.userTokenRepo.GetAllTokenByUserID(req.Notification.UserID)
 	msg := &messaging.MulticastMessage{
 		Tokens: tokens,
 		Notification: &messaging.Notification{

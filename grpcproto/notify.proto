@@ -36,7 +36,7 @@ service notify {
     rpc PushNotify(PushNotifyReq) returns(PushNotifyResp);
     rpc RegisterTokenToTopic(RegisterTokenToTopicRequest) returns (grpcproto.bool);
     rpc UnRegisterTokenToTopic(RegisterTokenToTopicRequest) returns (grpcproto.bool);
-
+    rpc PushNotifyToTopic(PushNotifyReq) returns (grpcproto.bool);
 }
 
 message AddUserTokenReq {

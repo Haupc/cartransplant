@@ -1,12 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 
-	"github.com/haupc/cartransplant/car/repository"
+	"github.com/haupc/cartransplant/grpcproto"
 )
 
 func main() {
-	result, err := repository.GetPassengerTripRepo().FindPendingTrip(182, 0, 0, 10, 0)
-	fmt.Println(result, err)
+	mjson := []byte(`{"type":[],"date":1623258000}`)
+	var obj grpcproto.FindPendingTripRequest
+	fmt.Println(json.Unmarshal(mjson, &obj), obj)
 }

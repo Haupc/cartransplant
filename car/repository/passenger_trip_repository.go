@@ -15,7 +15,7 @@ type PassengerTripRepo interface {
 	Create(model *model.PassengerTrip, startPoint, endPoint *grpcproto.Point) error
 	FindUserTrip(model model.PassengerTrip) ([]model.PassengerTrip, error)
 	FindHistoryTrip(userID string) ([]model.PassengerTrip, error)
-	FindPendingTrip(from, to, date, seat, tripType int32) ([]model.PassengerTrip, error)
+	FindPendingTrip(from, to, date, seat int32, tripType []int32) ([]model.PassengerTrip, error)
 	Update(model *model.PassengerTrip) error
 	FindPassengerTripByID(userTripID int32) (*model.PassengerTrip, error)
 	RemainingUserTripByTripID(tripID int32) int32
@@ -61,22 +61,31 @@ func (r *passengerTripRepo) Update(passengerTrip *model.PassengerTrip) error {
 	return r.db.Save(passengerTrip).Error
 }
 
-func (r *passengerTripRepo) FindPendingTrip(from, to, date, seat, tripType int32) ([]model.PassengerTrip, error) {
+func (r *passengerTripRepo) FindPendingTrip(from, to, date, seat int32, tripType []int32) ([]model.PassengerTrip, error) {
 	var result []model.PassengerTrip
-	now := time.Now().Unix()
-	if date < int32(now) {
-		date = int32(now - now%86400)
-	}
-	startDate := date
-	endDate := time.Unix(int64(date), 0).AddDate(0, 0, 1).Unix()
+	query := r.db.Model(&model.PassengerTrip{}).Where("state = ?", 1)
 
-	query := r.db.Model(&model.PassengerTrip{}).Where("state = ? and (begin_leave_time between ? and ? or end_leave_time between ? and ?) ", 1, startDate, endDate, startDate, endDate)
+	now := time.Now().Unix()
+	today := time.Unix(now-now%86400, 0).Add(-7 * time.Hour).Unix()
+
+	if int64(date) < today {
+		query.Where("begin_leave_time >=  ?", today)
+	} else {
+		startDate := date
+		endDate := time.Unix(int64(date), 0).AddDate(0, 0, 1).Unix()
+		if date >= int32(today) && date < int32(today)+86400 {
+			startDate = int32(today)
+			endDate = today + 86400
+		}
+		query.Where("begin_leave_time between ? and ? or end_leave_time between ? and ?", startDate, endDate, startDate, endDate)
+
+	}
 	if seat > 0 {
 		query = query.Where("seat <= ?", seat)
 	}
 
-	if tripType > 0 {
-		query = query.Where("type = ?", tripType)
+	if len(tripType) > 0 {
+		query = query.Where("type in (?)", tripType)
 	}
 
 	if from > 0 {

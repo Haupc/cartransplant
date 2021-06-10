@@ -17,7 +17,6 @@ import (
 	"github.com/haupc/cartransplant/geometry/client"
 	"github.com/haupc/cartransplant/geometry/dto"
 	notify_client "github.com/haupc/cartransplant/notify/client"
-	"gorm.io/gorm"
 
 	"github.com/haupc/cartransplant/grpcproto"
 )
@@ -39,7 +38,7 @@ type TripService interface {
 	ListUserTrip(userID string, state int32) (*grpcproto.ListUserTripResponse, error)
 	ListDriverTrip(userID string, state, startDate, endDate int32) (*grpcproto.ListDriverTripResponse, error)
 	RegisterTripUser(userID string, beginLeaveTime, endLeaveTime int64, from, to *grpcproto.Point, seat, tripType int32, note string) error
-	FindPendingTrip(from, to, date, seat, tripType int32) (*grpcproto.ListUserTripResponse, error)
+	FindPendingTrip(from, to, date, seat int32, tripType []int32) (*grpcproto.ListUserTripResponse, error)
 	UpdateUserTrip(driverTripID, userTripID, userTripPrice int32) error
 	GetPassengerTripByID(userTripID int32) (*model.PassengerTrip, error)
 	CreateTripByUserTrip(tripModel *model.Trip) error
@@ -159,14 +158,16 @@ func (s *tripService) GetPassengerTripByID(userTripID int32) (*model.PassengerTr
 }
 
 func (s *tripService) UpdateUserTrip(driverTripID, userTripID, userTripPrice int32) error {
-	passengerTrip := &model.PassengerTrip{
-		Model: gorm.Model{
-			ID: uint(userTripID),
-		},
-		Price:  int64(userTripPrice),
-		TripID: int64(driverTripID),
+	passengerTrip, err := s.PassengerTripRepo.FindPassengerTripByID(userTripID)
+	if err != nil {
+		log.Printf("UpdateUserTrip - Error: %v", err)
+		return err
 	}
-	err := s.PassengerTripRepo.Update(passengerTrip)
+	passengerTrip.TripID = int64(driverTripID)
+	passengerTrip.Price = int64(userTripPrice)
+	passengerTrip.State = 2
+
+	err = s.PassengerTripRepo.Update(passengerTrip)
 	if err != nil {
 		log.Printf("UpdateUserTrip - Error: %v", err)
 		return err
@@ -174,7 +175,7 @@ func (s *tripService) UpdateUserTrip(driverTripID, userTripID, userTripPrice int
 	return nil
 }
 
-func (s *tripService) FindPendingTrip(from, to, date, seat, tripType int32) (*grpcproto.ListUserTripResponse, error) {
+func (s *tripService) FindPendingTrip(from, to, date, seat int32, tripType []int32) (*grpcproto.ListUserTripResponse, error) {
 	passengerTrips, err := s.PassengerTripRepo.FindPendingTrip(from, to, date, seat, tripType)
 	if err != nil {
 		return nil, err
@@ -220,6 +221,9 @@ func (s *tripService) RegisterTripUser(userID string, beginLeaveTime, endLeaveTi
 		Price:          int64(distance * 12000),
 		Note:           note + " ",
 		Type:           tripType,
+	}
+	if tripType != 1 {
+		passengerTrip.Price = 0
 	}
 	err := s.PassengerTripRepo.Create(&passengerTrip, from, to)
 	if err != nil {
@@ -387,6 +391,7 @@ func (s *tripService) TakeTrip(userID string, driverTripID, beginLeaveTime, endL
 		Note:           note + " ",
 	}
 	err := s.PassengerTripRepo.Create(passengerTripModel, from, to)
+	GetNotifyService().NotifyNewUserRegisterTrip(driverTrip.UserID, int32(driverTripID))
 	return err
 }
 

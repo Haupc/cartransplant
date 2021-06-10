@@ -13,6 +13,7 @@ type DriverProvinceRepo interface {
 	BatchCreate(models []model.DriverProvince) error
 	SelectAllProvinceByDriverID(driverID string) ([]int32, error)
 	BatchDelete(userID string, province []int32) error
+	GetAllDriverIDByTopic(topic string) ([]string, error)
 }
 
 var (
@@ -31,6 +32,16 @@ func GetDriverProvinceRepo() DriverProvinceRepo {
 		}
 	}
 	return _driverProvinceRepo
+}
+
+func (r *driverProvinceRepo) GetAllDriverIDByTopic(topic string) ([]string, error) {
+	var result []string
+	subquery := r.db.Model(&model.Province{}).Select("id").Where("topic = ?", topic)
+	if err := r.db.Model(&model.DriverProvince{}).Select("driver_id").Where("province_id = (?)", subquery).Find(&result).Error; err != nil {
+		log.Printf("GetAllDriverIDByTopic query - Error: %v", err)
+		return nil, err
+	}
+	return result, nil
 }
 
 func (r *driverProvinceRepo) BatchDelete(userID string, province []int32) error {

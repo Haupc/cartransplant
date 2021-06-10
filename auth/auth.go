@@ -56,7 +56,7 @@ func main() {
 		carRoutes.POST("/take-trip", carController.TakeTrip)
 		carRoutes.GET("/driver/list-trip", carController.ListDriverTrip)
 		carRoutes.POST("/user/register-trip", carController.RegisterTripUser)
-		carRoutes.GET("/driver/find-pending-trip", carController.FindPendingTrip)
+		carRoutes.POST("/driver/find-pending-trip", carController.FindPendingTrip)
 		carRoutes.DELETE("/user/cancel-trip", carController.UserCancelTrip)
 		carRoutes.GET("/driver/mark-user-trip-done", carController.MarkUserTripDone)
 		carRoutes.POST("/driver/takeTrip", carController.DriverTakeTrip)
