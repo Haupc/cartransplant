@@ -32,7 +32,7 @@ type tripService struct {
 }
 
 type TripService interface {
-	CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance float32, beginLeaveTime, endLeaveTime, priceEachKm int64, seat int32) error
+	CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance float32, beginLeaveTime, endLeaveTime, priceEachKm int64, seat, tripType int32) error
 	FindTrip(from *grpcproto.Point, to *grpcproto.Point, beginLeaveTime int64, endLeaveTime int64, tripType, seat int32) ([]trip_dto.FindTripResponse, error)
 	TakeTrip(userID string, driverTripID, beginLeaveTime, endLeaveTime int64, seat int32, from, to *grpcproto.Point, note string) error
 	ListUserTrip(userID string, state int32) (*grpcproto.ListUserTripResponse, error)
@@ -295,7 +295,7 @@ func (s *tripService) ListDriverTrip(userID string, state, startDate, endDate in
 	return response, nil
 }
 
-func (s *tripService) CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance float32, beginLeaveTime, endLeaveTime, priceEachKm int64, seat int32) error {
+func (s *tripService) CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance float32, beginLeaveTime, endLeaveTime, priceEachKm int64, seat, tripType int32) error {
 	if beginLeaveTime < time.Now().Unix() {
 		beginLeaveTime = time.Now().Unix()
 	}
@@ -310,7 +310,10 @@ func (s *tripService) CreateTrip(route dto.RoutingDTO, userID string, carID int6
 		return errors.New("Car not existed")
 
 	}
-	return s.TripRepo.CreateTrip(route, userID, carID, maxDistance, beginLeaveTime, endLeaveTime, priceEachKm, seat)
+	if tripType == 3 {
+		tripType = 2
+	}
+	return s.TripRepo.CreateTrip(route, userID, carID, maxDistance, beginLeaveTime, endLeaveTime, priceEachKm, seat, tripType)
 }
 
 func (s *tripService) FindTrip(from *grpcproto.Point, to *grpcproto.Point, beginLeaveTime int64, endLeaveTime int64, tripType, seat int32) ([]trip_dto.FindTripResponse, error) {
@@ -386,7 +389,7 @@ func (s *tripService) TakeTrip(userID string, driverTripID, beginLeaveTime, endL
 		State:          base.TRIP_STATUS_TAKEN,
 		BeginLeaveTime: beginLeaveTime,
 		EndLeaveTime:   endLeaveTime,
-		Price:          int64(float64(driverTrip.FeeEachKm)*distance) / 1000,
+		Price:          int64(float64(driverTrip.FeeEachKm) * distance),
 		Type:           driverTrip.Type,
 		Note:           note + " ",
 	}

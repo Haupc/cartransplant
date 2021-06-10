@@ -16,6 +16,7 @@ var _notifyService *notifyService
 type NotifyService interface {
 	NotifyNewTrip(startPoint *grpcproto.Point)
 	NotifyNewUserRegisterTrip(driverID string, driverTripID int32)
+	NotifyDriverTakeTrip(userID string, userTripID int32)
 }
 
 type notifyService struct {
@@ -56,6 +57,22 @@ func (s *notifyService) NotifyNewUserRegisterTrip(driverID string, driverTripID 
 			Message:     fmt.Sprintf("Có chuyến đi %d của bạn có thêm hành khách mới", driverTripID),
 			Image:       "https://thaygiangcomai.com/wp-content/uploads/2019/05/car-icon.png",
 			UserID:      driverID,
+		},
+	}
+	_, err := client.GetNotifyClient().PushNotify(context.Background(), pushNotiRQ)
+	if err != nil {
+		log.Printf("NotifyNewTrip - Error: %v", err)
+	}
+}
+
+func (s *notifyService) NotifyDriverTakeTrip(userID string, userTripID int32) {
+	pushNotiRQ := &grpcproto.PushNotifyReq{
+		Notification: &grpcproto.NotifyMessage{
+			CreatedTime: time.Now().Unix(),
+			Title:       "Đã tìm thấy driver",
+			Message:     fmt.Sprintf("Có chuyến đi %d của bạn đã có tài xế nhận chuyến", userTripID),
+			Image:       "https://thaygiangcomai.com/wp-content/uploads/2019/05/car-icon.png",
+			UserID:      userID,
 		},
 	}
 	_, err := client.GetNotifyClient().PushNotify(context.Background(), pushNotiRQ)

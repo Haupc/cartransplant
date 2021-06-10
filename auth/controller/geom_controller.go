@@ -7,7 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/glog"
 	"github.com/haupc/cartransplant/auth/utils"
-	"github.com/haupc/cartransplant/base"
 	"github.com/haupc/cartransplant/geometry/client"
 	"github.com/haupc/cartransplant/grpcproto"
 )
@@ -58,7 +57,7 @@ func (c *geometryController) GetCurrentAddress(ctx *gin.Context) {
 
 func (c *geometryController) SearchAddress(ctx *gin.Context) {
 	query := ctx.Query("query")
-	query, _ = base.Normalize(query)
+	// query, _ = base.Normalize(query)
 	glog.V(4).Infof("SearchAddress - query: %s", query)
 	if query == "" {
 		errResp := utils.BuildErrorResponse("Invalid Request", "Query Empty", nil)

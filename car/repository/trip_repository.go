@@ -18,7 +18,7 @@ var tripRepository *tripRepo
 
 // tripRepo interact with db
 type TripRepo interface {
-	CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance float32, beginLeaveTime, endLeaveTime int64, priceEachKm int64, seat int32) error
+	CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance float32, beginLeaveTime, endLeaveTime int64, priceEachKm int64, seat, tripType int32) error
 	FindTrip(from *grpcproto.Point, to *grpcproto.Point, tripType int32) ([]model.Trip, error)
 	GetTripByID(tripID int64) (*model.Trip, error)
 	GetTripByUserID(userID string, state, startDate, endDate int32) ([]model.Trip, error)
@@ -61,7 +61,7 @@ func (r *tripRepo) FindLastTrip(tripModel *model.Trip) (*model.Trip, error) {
 
 func (r *tripRepo) GetTakenSeatByTripID(tripID int64) int32 {
 	var result int32
-	if err := r.db.Raw("select sum(seat) from passenger_trip where trip_id = ? and state = 2", 26).Scan(&result).Error; err != nil {
+	if err := r.db.Raw("select sum(seat) from passenger_trip where trip_id = ? and state = 2", tripID).Scan(&result).Error; err != nil {
 		glog.V(3).Infof("GetTakenSeatByTripID - error: %v", err)
 		return 0
 	}
@@ -94,13 +94,13 @@ func (r *tripRepo) GetTripByID(tripID int64) (*model.Trip, error) {
 	return &tripModel, nil
 }
 
-func (r *tripRepo) CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance float32, beginLeaveTime, endLeaveTime int64, priceEachKm int64, seat int32) error {
+func (r *tripRepo) CreateTrip(route dto.RoutingDTO, userID string, carID int64, maxDistance float32, beginLeaveTime, endLeaveTime int64, priceEachKm int64, seat, tripType int32) error {
 	lineString := makeLineString(route)
 	way_json, _ := json.Marshal(route)
 
-	query := fmt.Sprintf("insert into public.trip (user_id, car_id, max_distance, way, way_json, begin_leave_time, end_leave_time, fee_each_km, seat, state, type)  values (?, ?, ? , %s, ?, ?, ?, ?, ?, 1, 2)", lineString)
+	query := fmt.Sprintf("insert into public.trip (user_id, car_id, max_distance, way, way_json, begin_leave_time, end_leave_time, fee_each_km, seat, state, type)  values (?, ?, ? , %s, ?, ?, ?, ?, ?, 1, ?)", lineString)
 	log.Printf("CreateTrip query: %s", query)
-	if err := r.db.Exec(query, userID, carID, maxDistance, way_json, beginLeaveTime, endLeaveTime, priceEachKm, seat).Error; err != nil {
+	if err := r.db.Exec(query, userID, carID, maxDistance, way_json, beginLeaveTime, endLeaveTime, priceEachKm, seat, tripType).Error; err != nil {
 		log.Printf("CreateTrip query - Error: %v", err)
 		return err
 	}
